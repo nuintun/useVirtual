@@ -1,0 +1,58 @@
+{
+  "name": "@nuintun/use-virtual",
+  "version": "0.0.1",
+  "description": "😎 ♻️ A tiny React hook for rendering large datasets like a breeze.",
+  "type": "module",
+  "main": "cjs/index.cjs",
+  "module": "esm/index.js",
+  "types": "types/index.d.ts",
+  "exports": {
+    "import": "./esm/index.js",
+    "require": "./cjs/index.cjs"
+  },
+  "files": [
+    "cjs",
+    "esm",
+    "types"
+  ],
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "clean": "node tools/clean.js",
+    "format": "prettier --write .",
+    "prepublishOnly": "npm run build",
+    "build:cjs": "rollup -c tools/rollup.cjs.js",
+    "build:esm": "rollup -c tools/rollup.esm.js",
+    "build": "npm run clean && npm run build:main && npm run format",
+    "build:main": "npm run build:cjs && npm run build:esm && npm run build:types",
+    "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nuintun/useVirtual.git"
+  },
+  "keywords": [
+    "virtual"
+  ],
+  "sideEffects": false,
+  "author": {
+    "name": "nuintun",
+    "email": "nuintun@qq.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nuintun/useVirtual/issues"
+  },
+  "dependencies": {
+    "tslib": "^2.4.0"
+  },
+  "devDependencies": {
+    "@rollup/plugin-replace": "^5.0.0",
+    "@rollup/plugin-typescript": "^9.0.1",
+    "magic-string": "^0.26.7",
+    "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^3.1.0",
+    "typescript": "^4.8.4"
+  },
+  "homepage": "https://github.com/nuintun/useVirtual#readme"
+}
