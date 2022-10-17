@@ -60,13 +60,17 @@ export default function useVirtual(
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
 
-    measuresRef.current = [];
+    let index = Math.min(start, measures.length);
 
-    for (let index = start; index < length; index++) {
+    const nextMeasures = measures.slice(0, index);
+
+    for (; index < length; index++) {
       const itemSize = measures[index]?.size ?? getItemSize(index, size, viewport);
 
-      measuresRef.current.push(getMeasure(index, measures, itemSize));
+      nextMeasures.push(getMeasure(index, measures, itemSize));
     }
+
+    measuresRef.current = nextMeasures;
   });
 
   const calcVisibility = useStableCallback((offset: number) => {
@@ -94,7 +98,13 @@ export default function useVirtual(
   });
 
   useEffect(() => {
-    refreshMeasures(0);
+    const { current: measures } = measuresRef;
+
+    if (measures.length > length) {
+      measuresRef.current = measures.slice(0, length);
+    } else {
+      refreshMeasures(measures.length, length);
+    }
   }, [length]);
 
   return [
