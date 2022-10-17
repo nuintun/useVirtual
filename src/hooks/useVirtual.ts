@@ -101,7 +101,7 @@ export default function useVirtual(
     if (measures.length > length) {
       measuresRef.current = measures.slice(0, length);
     } else {
-      refreshMeasures(measures.length, length);
+      refreshMeasures(measures.length);
     }
   }, [length]);
 
