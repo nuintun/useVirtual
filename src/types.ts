@@ -1,4 +1,6 @@
-import { TaroElement } from '@tarojs/runtime';
+/**
+ * @module types
+ */
 
 export interface Measure {
   end: number;
@@ -19,7 +21,7 @@ export interface Item {
   readonly sticky?: true;
   readonly scrolling?: true;
   readonly viewport: Viewport;
-  readonly measure: (element: TaroElement | null) => void;
+  readonly measure: (element: Element | null) => void;
 }
 
 export interface State {
@@ -77,8 +79,8 @@ export interface Options {
   onResize?: OnResize;
   horizontal?: boolean;
   scrolling?: Scrolling;
-  frame: TaroElement | null;
-  viewport: TaroElement | null;
+  frame: Element | null;
+  viewport: Element | null;
   initial?: number | [number, number];
   isItemLoaded?: (index: number) => boolean;
   scrollspy?: boolean | ((speed: number) => boolean);

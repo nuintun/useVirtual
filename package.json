@@ -48,11 +48,15 @@
   "devDependencies": {
     "@rollup/plugin-replace": "^5.0.0",
     "@rollup/plugin-typescript": "^9.0.1",
+    "@types/react": "^18.0.21",
     "magic-string": "^0.26.7",
     "prettier": "^2.7.1",
     "rimraf": "^3.0.2",
     "rollup": "^3.2.2",
     "typescript": "^4.8.4"
+  },
+  "peerDependencies": {
+    "react": ">=17.0.0"
   },
   "homepage": "https://github.com/nuintun/useVirtual#readme"
 }

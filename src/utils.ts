@@ -1,18 +1,16 @@
-import { NodesRef } from '@tarojs/taro';
+/**
+ * @module utils
+ */
+
 import { Item, Measure, Options, Viewport } from './types';
-import { queryNodeRef } from '/utils/dom';
-import { isFunction } from '/utils/utils';
-import { TaroElement } from '@tarojs/runtime';
 
 /**
- * @function getBoundingClientRect
- * @param element
- * @param callback
+ * @function isFunction
+ * @description 是否为函数
+ * @param value 需要验证的值
  */
-export function getBoundingClientRect(element: TaroElement, callback: NodesRef.BoundingClientRectCallback): void {
-  const nodeRef = queryNodeRef(element);
-
-  nodeRef.boundingClientRect(callback).exec();
+export function isFunction(value: unknown): value is Function {
+  return typeof value === 'function';
 }
 
 /**
@@ -23,7 +21,7 @@ export function getBoundingClientRect(element: TaroElement, callback: NodesRef.B
  * @param input 检测值
  * @param getValue 根据索引获取值的方法
  */
-function binarySearch(low: number, high: number, input: number, getValue: (index: number) => number): number {
+export function binarySearch(low: number, high: number, input: number, getValue: (index: number) => number): number {
   while (low <= high) {
     const middle = ((low + high) / 2) | 0;
 
