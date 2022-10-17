@@ -26,8 +26,8 @@ export interface Item {
 
 export interface State {
   items: Item[];
-  innerSize?: number;
-  innerOffset?: number;
+  frameSize?: number;
+  frameOffset?: number;
 }
 
 export interface LoadEvent {

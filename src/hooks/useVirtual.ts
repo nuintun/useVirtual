@@ -45,8 +45,8 @@ export default function useVirtual(
 
   const [state, setState] = useState<State>(() => {
     return {
-      innerSize: 0,
-      innerOffset: 0,
+      frameSize: 0,
+      frameOffset: 0,
       items: getInitialItems(size, initial)
     };
   });
@@ -92,10 +92,10 @@ export default function useVirtual(
     const oEnd = Math.min(vEnd + overscan, lastIndex);
 
     const measure = measures[oEnd];
-    const innerOffset = measures[oStart].start;
-    const innerSize = measure.end - innerOffset;
+    const frameOffset = measures[oStart].start;
+    const frameSize = measure.end - frameOffset;
 
-    return { vStart, vEnd, oStart, oEnd, innerSize, innerOffset };
+    return { vStart, vEnd, oStart, oEnd, frameSize, frameOffset };
   });
 
   useEffect(() => {
