@@ -97,11 +97,10 @@ export default function useVirtual(
 
   useEffect(() => {
     const { current: measures } = measuresRef;
+    const { length: measuresLength } = measures;
 
-    if (measures.length > length) {
-      measuresRef.current = measures.slice(0, length);
-    } else {
-      refreshMeasures(measures.length);
+    if (measuresLength !== length) {
+      refreshMeasures(Math.min(length, measuresLength));
     }
   }, [length]);
 
