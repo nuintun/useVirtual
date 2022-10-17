@@ -56,7 +56,7 @@ export default function useVirtual(
     return ['height', 'marginTop', 'scrollTop'];
   }, [horizontal]);
 
-  const refreshMeasures = useStableCallback((start: number = 0) => {
+  const refreshMeasures = useStableCallback((start: number) => {
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
 
@@ -94,8 +94,8 @@ export default function useVirtual(
   });
 
   useEffect(() => {
-    refreshMeasures();
-  }, []);
+    refreshMeasures(0);
+  }, [length]);
 
   return [
     state.items,
