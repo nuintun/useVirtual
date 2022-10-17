@@ -65,9 +65,7 @@ export default function useVirtual(
     const nextMeasures = measures.slice(0, index);
 
     for (; index < length; index++) {
-      const itemSize = measures[index]?.size ?? getItemSize(index, size, viewport);
-
-      nextMeasures.push(getMeasure(index, measures, itemSize));
+      nextMeasures.push(getMeasure(index, measures, size, viewport));
     }
 
     measuresRef.current = nextMeasures;

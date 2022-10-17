@@ -14,18 +14,6 @@ export function isFunction(value: unknown): value is Function {
 }
 
 /**
- * @function getMeasure
- * @param index 索引
- * @param measures 已缓存测量数组
- * @param size 列表项目尺寸
- */
-export function getMeasure(index: number, measures: Measure[], size: number): Measure {
-  const start = measures[index - 1]?.end ?? 0;
-
-  return { index, size, start, end: start + size };
-}
-
-/**
  * @function getItemSize
  * @param index 索引
  * @param size 列表项目尺寸
@@ -33,6 +21,20 @@ export function getMeasure(index: number, measures: Measure[], size: number): Me
  */
 export function getItemSize(index: number, size: Options['size'], viewport: Viewport): number {
   return isFunction(size) ? size(index, viewport) : size;
+}
+
+/**
+ * @function getMeasure
+ * @param index 索引
+ * @param measures 已缓存测量数组
+ * @param size 列表项目尺寸
+ * @param viewport 视窗尺寸
+ */
+export function getMeasure(index: number, measures: Measure[], size: Options['size'], viewport: Viewport): Measure {
+  const start = measures[index - 1]?.end ?? 0;
+  const itemSize = measures[index]?.size ?? getItemSize(index, size, viewport);
+
+  return { index, start, size: itemSize, end: start + itemSize };
 }
 
 /**
