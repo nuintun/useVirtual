@@ -6,8 +6,9 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import useIsMounted from './useIsMounted';
 import useStableCallback from './useStableCallback';
-import { getInitialItems, getItemSize, getMeasure, getVisibleRange } from '../utils';
+import { getInitialItems, getMeasure, getVisibleRange } from '../utils';
 import { Item, KeysMap, Measure, Methods, Options, State, Viewport } from '../types';
+import usePrevious from './usePrevious';
 
 export default function useVirtual(
   length: number,
@@ -32,12 +33,14 @@ export default function useVirtual(
   const scrollOffsetRef = useRef(0);
   const prevEndIndexRef = useRef(-1);
   const userScrollRef = useRef(true);
+  const prevSize = usePrevious(size);
   const prevItemIndexRef = useRef(-1);
   const isScrollingRef = useRef(true);
   const remeasureIndexRef = useRef(-1);
   const isScrollToItemRef = useRef(false);
   const scrollToRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
+  const isSizeChanged = size.toString() !== prevSize?.toString();
   const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
 
   const [state, setState] = useState<State>(() => {
@@ -99,10 +102,12 @@ export default function useVirtual(
     const { current: measures } = measuresRef;
     const { length: measuresLength } = measures;
 
-    if (measuresLength !== length) {
+    if (isSizeChanged) {
+      refreshMeasures(0);
+    } else if (measuresLength !== length) {
       refreshMeasures(Math.min(length, measuresLength));
     }
-  }, [length]);
+  }, [length, isSizeChanged]);
 
   return [
     state.items,
