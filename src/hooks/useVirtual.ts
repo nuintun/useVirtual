@@ -2,7 +2,7 @@
  * @module useVirtual
  */
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import useIsMounted from './useIsMounted';
 import useStableCallback from './useStableCallback';
@@ -28,15 +28,15 @@ export default function useVirtual(
     overscan = 10
   }: Options
 ): [items: Item[], methods: Methods] {
-  const prevVStopRef = useRef(-1);
   const isMounted = useIsMounted();
-  const prevItemIdxRef = useRef(-1);
   const scrollOffsetRef = useRef(0);
+  const prevEndIndexRef = useRef(-1);
   const userScrollRef = useRef(true);
-  const hasDynamicRef = useRef(false);
+  const prevItemIndexRef = useRef(-1);
   const isScrollingRef = useRef(true);
-  const scrollToRafRef = useRef<number>();
+  const remeasureIndexRef = useRef(-1);
   const isScrollToItemRef = useRef(false);
+  const scrollToRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
   const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
 
@@ -56,20 +56,14 @@ export default function useVirtual(
     return ['height', 'marginTop', 'scrollTop'];
   }, [horizontal]);
 
-  const calcMeasures = useStableCallback((start: number = 0, skipCache = false) => {
+  const refreshMeasures = useStableCallback((start: number = 0) => {
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
 
     measuresRef.current = [];
 
     for (let index = start; index < length; index++) {
-      let itemSize: number;
-
-      if (skipCache) {
-        itemSize = getItemSize(index, size, viewport);
-      } else {
-        itemSize = measures[index]?.size ?? getItemSize(index, size, viewport);
-      }
+      const itemSize = measures[index]?.size ?? getItemSize(index, size, viewport);
 
       measuresRef.current.push(getMeasure(index, measures, itemSize));
     }
@@ -78,8 +72,15 @@ export default function useVirtual(
   const calcVisibility = useStableCallback((offset: number) => {
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
-    const { current: hasDynamic } = hasDynamicRef;
-    const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures, hasDynamic);
+    const { current: remeasureIndex } = remeasureIndexRef;
+
+    if (remeasureIndex >= 0) {
+      refreshMeasures(remeasureIndex);
+
+      remeasureIndexRef.current = -1;
+    }
+
+    const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures);
 
     const lastIndex = measures.length - 1;
     const oStart = Math.max(vStart - overscan, 0);
@@ -91,6 +92,10 @@ export default function useVirtual(
 
     return { vStart, vEnd, oStart, oEnd, innerSize, innerOffset };
   });
+
+  useEffect(() => {
+    refreshMeasures();
+  }, []);
 
   return [
     state.items,

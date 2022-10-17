@@ -14,77 +14,6 @@ export function isFunction(value: unknown): value is Function {
 }
 
 /**
- * @function binarySearch
- * @description 二分法查找算法
- * @param low 低位索引
- * @param high 高位索引
- * @param input 检测值
- * @param getValue 根据索引获取值的方法
- */
-export function binarySearch(low: number, high: number, input: number, getValue: (index: number) => number): number {
-  while (low <= high) {
-    const middle = ((low + high) / 2) | 0;
-
-    const value = getValue(middle);
-
-    if (input < value) {
-      high = middle - 1;
-    } else if (input > value) {
-      low = middle + 1;
-    } else {
-      return middle;
-    }
-  }
-
-  return low > 0 ? low - 1 : 0;
-}
-
-/**
- * @function getVisibleRange
- * @param szie 视窗尺寸
- * @param offset 视窗滚动偏移
- * @param measures 缓存的尺寸数组
- * @param hasDynamic 是否有动态尺寸的列表项
- */
-export function getVisibleRange(
-  szie: number,
-  offset: number,
-  measures: Measure[],
-  hasDynamic: boolean
-): [start: number, end: number] {
-  const bottom = offset + szie;
-  const lastIndex = measures.length - 1;
-
-  let start = 0;
-
-  if (hasDynamic) {
-    while (start < lastIndex) {
-      const measure = measures[start];
-
-      if (measure.start + measure.size < offset) {
-        start++;
-      }
-    }
-  } else {
-    start = binarySearch(0, lastIndex, offset, index => measures[index].start);
-  }
-
-  let end = start;
-
-  while (end < lastIndex) {
-    const measure = measures[end];
-
-    if (measure.start + measure.size < bottom) {
-      end++;
-    }
-  }
-
-  end = end === lastIndex ? end : end - 1;
-
-  return [start, end];
-}
-
-/**
  * @function getMeasure
  * @param index 索引
  * @param measures 已缓存测量数组
@@ -93,7 +22,7 @@ export function getVisibleRange(
 export function getMeasure(index: number, measures: Measure[], size: number): Measure {
   const start = measures[index - 1]?.end ?? 0;
 
-  return { index, start, end: start + size, size };
+  return { index, size, start, end: start + size };
 }
 
 /**
@@ -127,4 +56,44 @@ export function getInitialItems(size: Options['size'], initial: Options['initial
     });
 
   return items;
+}
+
+/**
+ * @function binarySearch
+ * @description 二分法查找算法
+ * @param start 开始索引
+ * @param end 结束索引
+ * @param target 检测目标
+ * @param getTarget 根据索引获取对比目标
+ */
+export function binarySearch(start: number, end: number, target: number, getTarget: (index: number) => number): number {
+  while (start <= end) {
+    const middle = ((start + end) / 2) | 0;
+    const compareTarget = getTarget(middle);
+
+    if (target < compareTarget) {
+      end = middle - 1;
+    } else if (target > compareTarget) {
+      start = middle + 1;
+    } else {
+      return middle;
+    }
+  }
+
+  return start > 0 ? start - 1 : 0;
+}
+
+/**
+ * @function getVisibleRange
+ * @param size 视窗尺寸
+ * @param offset 视窗滚动偏移
+ * @param measures 缓存的尺寸数组
+ */
+export function getVisibleRange(size: number, offset: number, measures: Measure[]): [start: number, end: number] {
+  const offsetEnd = offset + size;
+  const lastIndex = measures.length - 1;
+  const start = binarySearch(0, lastIndex, offset, index => measures[index].start);
+  const end = binarySearch(start, lastIndex, offsetEnd, index => measures[index].end);
+
+  return [start, end];
 }
