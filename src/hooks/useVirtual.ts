@@ -45,8 +45,7 @@ export default function useVirtual(
 
   const [state, setState] = useState<State>(() => {
     return {
-      frameSize: 0,
-      frameOffset: 0,
+      frame: { size: 0, offset: 0 },
       items: getInitialItems(size, initial)
     };
   });

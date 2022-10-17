@@ -24,10 +24,14 @@ export interface Item {
   readonly measure: (element: Element | null) => void;
 }
 
+export interface Frame {
+  size: number;
+  offset: number;
+}
+
 export interface State {
+  frame: Frame;
   items: Item[];
-  frameSize?: number;
-  frameOffset?: number;
 }
 
 export interface LoadEvent {
