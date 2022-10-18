@@ -29,10 +29,10 @@ export function useVirtual(
     overscan = 10
   }: Options
 ): [items: Item[], methods: Methods] {
+  const offsetRef = useRef(0);
   const isMounted = useIsMounted();
-  const scrollOffsetRef = useRef(0);
+  const isTrustedRef = useRef(true);
   const prevEndIndexRef = useRef(-1);
-  const userScrollRef = useRef(true);
   const prevSize = usePrevious(size);
   const prevItemIndexRef = useRef(-1);
   const isScrollingRef = useRef(true);
