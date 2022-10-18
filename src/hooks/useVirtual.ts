@@ -8,7 +8,7 @@ import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useStableCallback } from './useStableCallback';
 import { getInitialItems, getMeasure, getVisibleRange } from '../utils';
-import { Item, KeysMap, Measure, Methods, Options, State, Viewport } from '../types';
+import { Item, MappingKeys, Measure, Methods, ObserverCallback, Options, State, Viewport } from '../types';
 
 export function useVirtual(
   length: number,
@@ -42,6 +42,7 @@ export function useVirtual(
   const measuresRef = useRef<Measure[]>([]);
   const isSizeChanged = size.toString() !== prevSize?.toString();
   const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
+  const observerCallbacks = useMemo(() => new Map<Element, ObserverCallback>(), []);
 
   const [state, setState] = useState<State>(() => {
     return {
@@ -50,7 +51,20 @@ export function useVirtual(
     };
   });
 
-  const [sizeKey, offsetKey, scrollKey] = useMemo<KeysMap>(() => {
+  const observer = useMemo(() => {
+    return new ResizeObserver((entries, observer) => {
+      for (const entry of entries) {
+        const { target } = entry;
+        const callback = observerCallbacks.get(target);
+
+        if (callback) {
+          callback(entry, observer);
+        }
+      }
+    });
+  }, []);
+
+  const [sizeKey, offsetKey, scrollKey] = useMemo<MappingKeys>(() => {
     if (horizontal) {
       return ['width', 'marginLeft', 'scrollLeft'];
     }
@@ -106,6 +120,50 @@ export function useVirtual(
       refreshMeasures(Math.min(length, measuresLength));
     }
   }, [length, isSizeChanged]);
+
+  useEffect(() => {
+    if (frame) {
+      observerCallbacks.set(frame, entry => {
+        console.log(entry);
+      });
+
+      observer.observe(frame);
+    }
+
+    return () => {
+      if (frame) {
+        observer.unobserve(frame);
+        observerCallbacks.delete(frame);
+      }
+    };
+  }, [frame]);
+
+  useEffect(() => {
+    const onScroll = () => {};
+
+    if (viewport) {
+      observerCallbacks.set(viewport, entry => {
+        console.log(entry);
+      });
+
+      observer.observe(viewport);
+      viewport.addEventListener('scroll', onScroll, { passive: true });
+    }
+
+    return () => {
+      if (viewport) {
+        observer.unobserve(viewport);
+        observerCallbacks.delete(viewport);
+        viewport.removeEventListener('scroll', onScroll);
+      }
+    };
+  }, [viewport, sizeKey, offsetKey, scrollKey]);
+
+  useEffect(() => {
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   return [
     state.items,

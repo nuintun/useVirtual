@@ -2,6 +2,16 @@
  * @module types
  */
 
+export type SizeKey = 'width' | 'height';
+
+export type OffsetKey = 'marginLeft' | 'marginTop';
+
+export type ScrollKey = 'scrollLeft' | 'scrollTop';
+
+export type IndexRange = [start: number, end: number];
+
+export type MappingKeys = [sizeKey: SizeKey, offsetKey: OffsetKey, scrollKey: ScrollKey];
+
 export interface Measure {
   end: number;
   size: number;
@@ -35,11 +45,11 @@ export interface State {
 }
 
 export interface LoadEvent {
-  readonly endIndex: number;
-  readonly loadIndex: number;
-  readonly startIndex: number;
-  readonly userScroll: boolean;
-  readonly scrollOffset: number;
+  readonly index: number;
+  readonly offset: number;
+  readonly isTrusted: boolean;
+  readonly visible: IndexRange;
+  readonly overscan: IndexRange;
 }
 
 export interface onLoad {
@@ -47,13 +57,11 @@ export interface onLoad {
 }
 
 export interface ScrollEvent {
-  readonly userScroll: boolean;
-  readonly scrollOffset: number;
-  readonly scrollForward: boolean;
-  readonly visibleEndIndex: number;
-  readonly overscanEndIndex: number;
-  readonly visibleStartIndex: number;
-  readonly overscanStartIndex: number;
+  readonly offset: number;
+  readonly forward: boolean;
+  readonly isTrusted: boolean;
+  readonly visible: IndexRange;
+  readonly overscan: IndexRange;
 }
 
 export interface OnScroll {
@@ -122,10 +130,6 @@ export interface Methods {
   scrollToItem: ScrollToItem;
 }
 
-export type SizeKey = 'width' | 'height';
-
-export type OffsetKey = 'marginLeft' | 'marginTop';
-
-export type ScrollKey = 'scrollLeft' | 'scrollTop';
-
-export type KeysMap = [sizeKey: SizeKey, offsetKey: OffsetKey, scrollKey: ScrollKey];
+export interface ObserverCallback {
+  (entry: ResizeObserverEntry, observer: ResizeObserver): void;
+}
