@@ -2,7 +2,15 @@
  * @module utils
  */
 
-import { Item, Measure, Options, Viewport } from './types';
+import { IndexRange, ItemSize, Measure, Viewport } from './types';
+
+export function easing(time: number): number {
+  return 1 - Math.pow(1 - time, 4);
+}
+
+export function duration(distance: number): number {
+  return Math.min(Math.max(distance * 0.075, 100), 500);
+}
 
 /**
  * @function isFunction
@@ -19,7 +27,7 @@ export function isFunction(value: unknown): value is Function {
  * @param size 列表项目尺寸
  * @param viewport 视窗尺寸
  */
-export function getItemSize(index: number, size: Options['size'], viewport: Viewport): number {
+export function getItemSize(index: number, size: ItemSize, viewport: Viewport): number {
   return isFunction(size) ? size(index, viewport) : size;
 }
 
@@ -30,34 +38,11 @@ export function getItemSize(index: number, size: Options['size'], viewport: View
  * @param size 列表项目尺寸
  * @param viewport 视窗尺寸
  */
-export function getMeasure(index: number, measures: Measure[], size: Options['size'], viewport: Viewport): Measure {
+export function getMeasure(index: number, measures: Measure[], size: ItemSize, viewport: Viewport): Measure {
   const start = measures[index - 1]?.end ?? 0;
   const itemSize = measures[index]?.size ?? getItemSize(index, size, viewport);
 
   return { index, start, size: itemSize, end: start + itemSize };
-}
-
-/**
- * @function getInitialItems
- * @param size 列表项目尺寸
- * @param initial 初始化加载列表项数目
- */
-export function getInitialItems(size: Options['size'], initial: Options['initial'] = 0): Item[] {
-  const items: Item[] = [];
-  const measure = () => null;
-  const viewport: Viewport = { width: 0, height: 0 };
-  const [start, end] = Array.isArray(initial) ? initial : [0, initial - 1];
-
-  for (let index = start; index <= end; index++)
-    items.push({
-      index,
-      measure,
-      start: 0,
-      viewport,
-      size: getItemSize(index, size, viewport)
-    });
-
-  return items;
 }
 
 /**
@@ -82,7 +67,7 @@ export function binarySearch(start: number, end: number, target: number, getTarg
     }
   }
 
-  return start > 0 ? start - 1 : 0;
+  return Math.max(0, start - 1);
 }
 
 /**
@@ -90,12 +75,28 @@ export function binarySearch(start: number, end: number, target: number, getTarg
  * @param size 视窗尺寸
  * @param offset 视窗滚动偏移
  * @param measures 缓存的尺寸数组
+ * @param anchor 锚点尺寸数据
  */
-export function getVisibleRange(size: number, offset: number, measures: Measure[]): [start: number, end: number] {
-  const offsetEnd = offset + size;
-  const lastIndex = measures.length - 1;
-  const start = binarySearch(0, lastIndex, offset, index => measures[index].start);
-  const end = binarySearch(start, lastIndex, offsetEnd, index => measures[index].end);
+export function getVisibleRange(size: number, offset: number, measures: Measure[], anchor?: Measure): IndexRange {
+  let start: number;
+
+  const maxIndex = measures.length - 1;
+
+  if (anchor) {
+    const { index: anchorIndex, start: anchorStart } = anchor;
+
+    if (anchorStart > offset) {
+      start = binarySearch(0, anchorIndex, offset, index => measures[index].start);
+    } else if (anchorStart < offset) {
+      start = binarySearch(anchorIndex, maxIndex, offset, index => measures[index].start);
+    } else {
+      start = anchorIndex;
+    }
+  } else {
+    start = binarySearch(0, maxIndex, offset, index => measures[index].start);
+  }
+
+  const end = binarySearch(start, maxIndex, offset + size, index => measures[index].end);
 
   return [start, end];
 }

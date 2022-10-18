@@ -7,7 +7,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useStableCallback } from './useStableCallback';
-import { getInitialItems, getMeasure, getVisibleRange } from '../utils';
+import { duration, easing, getMeasure, getVisibleRange } from '../utils';
 import { Item, MappingKeys, Measure, Methods, ObserverCallback, Options, State, Viewport } from '../types';
 
 export function useVirtual(
@@ -16,17 +16,14 @@ export function useVirtual(
     size,
     frame,
     onLoad,
-    initial,
     viewport,
     infinite,
     stickies,
     onResize,
     onScroll,
-    scrolling,
-    scrollspy,
     horizontal,
-    isItemLoaded,
-    overscan = 10
+    overscan = 10,
+    scrolling = { easing, duration }
   }: Options
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
@@ -34,6 +31,7 @@ export function useVirtual(
   const isTrustedRef = useRef(true);
   const prevEndIndexRef = useRef(-1);
   const prevSize = usePrevious(size);
+  const anchorRef = useRef<Measure>();
   const prevItemIndexRef = useRef(-1);
   const isScrollingRef = useRef(true);
   const remeasureIndexRef = useRef(-1);
@@ -45,10 +43,7 @@ export function useVirtual(
   const observerCallbacks = useMemo(() => new Map<Element, ObserverCallback>(), []);
 
   const [state, setState] = useState<State>(() => {
-    return {
-      frame: { size: 0, offset: 0 },
-      items: getInitialItems(size, initial)
-    };
+    return { items: [], frame: { size: 0, offset: 0 } };
   });
 
   const observer = useMemo(() => {
@@ -98,7 +93,7 @@ export function useVirtual(
       remeasureIndexRef.current = -1;
     }
 
-    const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures);
+    const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures, anchorRef.current);
 
     const oStart = Math.max(vStart - overscan, 0);
     const oEnd = Math.min(vEnd + overscan, measures.length - 1);

@@ -10,6 +10,8 @@ export type ScrollKey = 'scrollLeft' | 'scrollTop';
 
 export type IndexRange = [start: number, end: number];
 
+export type ItemSize = number | ((index: number, viewport: Viewport) => number);
+
 export type MappingKeys = [sizeKey: SizeKey, offsetKey: OffsetKey, scrollKey: ScrollKey];
 
 export interface Measure {
@@ -83,20 +85,17 @@ export interface Scrolling {
 }
 
 export interface Options {
+  size: ItemSize;
   onLoad?: onLoad;
   overscan?: number;
   infinite?: boolean;
   stickies?: number[];
-  onScroll?: OnScroll;
   onResize?: OnResize;
+  onScroll?: OnScroll;
   horizontal?: boolean;
   scrolling?: Scrolling;
   frame: Element | null;
   viewport: Element | null;
-  initial?: number | [number, number];
-  isItemLoaded?: (index: number) => boolean;
-  scrollspy?: boolean | ((speed: number) => boolean);
-  size: number | ((index: number, viewport: Viewport) => number);
 }
 
 export interface ScrollToOptions {
