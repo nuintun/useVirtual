@@ -4,13 +4,13 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
-import useIsMounted from './useIsMounted';
-import useStableCallback from './useStableCallback';
+import { usePrevious } from './usePrevious';
+import { useIsMounted } from './useIsMounted';
+import { useStableCallback } from './useStableCallback';
 import { getInitialItems, getMeasure, getVisibleRange } from '../utils';
 import { Item, KeysMap, Measure, Methods, Options, State, Viewport } from '../types';
-import usePrevious from './usePrevious';
 
-export default function useVirtual(
+export function useVirtual(
   length: number,
   {
     size,
@@ -86,9 +86,8 @@ export default function useVirtual(
 
     const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures);
 
-    const lastIndex = measures.length - 1;
     const oStart = Math.max(vStart - overscan, 0);
-    const oEnd = Math.min(vEnd + overscan, lastIndex);
+    const oEnd = Math.min(vEnd + overscan, measures.length - 1);
 
     const measure = measures[oEnd];
     const frameOffset = measures[oStart].start;
