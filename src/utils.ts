@@ -2,14 +2,33 @@
  * @module utils
  */
 
-import { IndexRange, ItemSize, Measure, Viewport } from './types';
+import { Duration, IndexRange, Measure, Scrolling, Size, Viewport } from './types';
 
-export function easing(time: number): number {
+/**
+ * @function easingImpl
+ * @description 缓动动画
+ * @param time 当前动画时间，0-1 之间
+ */
+export function easingImpl(time: number): number {
   return 1 - Math.pow(1 - time, 4);
 }
 
-export function duration(distance: number): number {
+/**
+ * @function durationImpl
+ * @description 动画持续时间
+ * @param distance 动画移动距离
+ */
+export function durationImpl(distance: number): number {
   return Math.min(Math.max(distance * 0.075, 100), 500);
+}
+
+/**
+ * @function isNumber
+ * @description 是否为数字
+ * @param value 需要验证的值
+ */
+export function isNumber(value: unknown): value is number {
+  return typeof value === 'function';
 }
 
 /**
@@ -22,12 +41,41 @@ export function isFunction(value: unknown): value is Function {
 }
 
 /**
- * @function getItemSize
+ * @function getScrolling
+ * @param scrolling
+ */
+export function getScrolling(scrolling?: Scrolling): Required<Scrolling> {
+  if (scrolling) {
+    const { easing = easingImpl, duration = durationImpl } = scrolling;
+
+    return { easing, duration };
+  }
+
+  return { easing: easingImpl, duration: durationImpl };
+}
+
+/**
+ * @function getDuration
+ * @param duration
+ * @param distance
+ */
+export function getDuration(duration: Duration, distance: number): number {
+  return isFunction(duration) ? duration(Math.abs(distance)) : duration;
+}
+
+/**
+ * @function now
+ * @description 获取高精度当前时间
+ */
+export const now = window.performance ? () => window.performance.now() : () => Date.now();
+
+/**
+ * @function getSize
  * @param index 索引
  * @param size 列表项目尺寸
  * @param viewport 视窗尺寸
  */
-export function getItemSize(index: number, size: ItemSize, viewport: Viewport): number {
+export function getSize(index: number, size: Size, viewport: Viewport): number {
   return isFunction(size) ? size(index, viewport) : size;
 }
 
@@ -38,11 +86,11 @@ export function getItemSize(index: number, size: ItemSize, viewport: Viewport): 
  * @param size 列表项目尺寸
  * @param viewport 视窗尺寸
  */
-export function getMeasure(index: number, measures: Measure[], size: ItemSize, viewport: Viewport): Measure {
+export function getMeasure(index: number, measures: Measure[], size: Size, viewport: Viewport): Measure {
   const start = measures[index - 1]?.end ?? 0;
-  const itemSize = measures[index]?.size ?? getItemSize(index, size, viewport);
+  const rect = measures[index]?.size ?? getSize(index, size, viewport);
 
-  return { index, start, size: itemSize, end: start + itemSize };
+  return { index, start, size: rect, end: start + rect };
 }
 
 /**

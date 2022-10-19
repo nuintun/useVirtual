@@ -4,15 +4,21 @@
 
 export type SizeKey = 'width' | 'height';
 
-export type OffsetKey = 'marginLeft' | 'marginTop';
+export type ScrollToKey = 'left' | 'top';
+
+export type Easing = (time: number) => number;
 
 export type ScrollKey = 'scrollLeft' | 'scrollTop';
 
+export type OffsetKey = 'marginLeft' | 'marginTop';
+
 export type IndexRange = [start: number, end: number];
 
-export type ItemSize = number | ((index: number, viewport: Viewport) => number);
+export type Duration = number | ((distance: number) => number);
 
-export type MappingKeys = [sizeKey: SizeKey, offsetKey: OffsetKey, scrollKey: ScrollKey];
+export type Size = number | ((index: number, viewport: Viewport) => number);
+
+export type MappingKeys = [sizeKey: SizeKey, offsetKey: OffsetKey, scrollKey: ScrollKey, scrollToKey: ScrollToKey];
 
 export interface Measure {
   end: number;
@@ -47,9 +53,7 @@ export interface State {
 }
 
 export interface LoadEvent {
-  readonly index: number;
   readonly offset: number;
-  readonly isTrusted: boolean;
   readonly visible: IndexRange;
   readonly overscan: IndexRange;
 }
@@ -61,7 +65,6 @@ export interface onLoad {
 export interface ScrollEvent {
   readonly offset: number;
   readonly forward: boolean;
-  readonly isTrusted: boolean;
   readonly visible: IndexRange;
   readonly overscan: IndexRange;
 }
@@ -80,12 +83,12 @@ export interface OnResize {
 }
 
 export interface Scrolling {
-  easing?: (time: number) => number;
-  duration?: number | ((distance: number) => number);
+  easing?: Easing;
+  duration?: Duration;
 }
 
 export interface Options {
-  size: ItemSize;
+  size: Size;
   onLoad?: onLoad;
   overscan?: number;
   infinite?: boolean;

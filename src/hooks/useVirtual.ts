@@ -4,39 +4,33 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import {
+  Item,
+  MappingKeys,
+  Measure,
+  Methods,
+  ObserverCallback,
+  Options,
+  ScrollTo,
+  ScrollToItem,
+  State,
+  Viewport
+} from '../types';
 import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useStableCallback } from './useStableCallback';
-import { duration, easing, getMeasure, getVisibleRange } from '../utils';
-import { Item, MappingKeys, Measure, Methods, ObserverCallback, Options, State, Viewport } from '../types';
+import { getDuration, getMeasure, getScrolling, getVisibleRange, isNumber, now } from '../utils';
 
 export function useVirtual(
   length: number,
-  {
-    size,
-    frame,
-    onLoad,
-    viewport,
-    infinite,
-    stickies,
-    onResize,
-    onScroll,
-    horizontal,
-    overscan = 10,
-    scrolling = { easing, duration }
-  }: Options
+  { size, frame, onLoad, viewport, infinite, stickies, onResize, onScroll, horizontal, overscan = 10, scrolling }: Options
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
+  const rafRef = useRef<number>();
   const isMounted = useIsMounted();
-  const isTrustedRef = useRef(true);
-  const prevEndIndexRef = useRef(-1);
   const prevSize = usePrevious(size);
   const anchorRef = useRef<Measure>();
-  const prevItemIndexRef = useRef(-1);
-  const isScrollingRef = useRef(true);
   const remeasureIndexRef = useRef(-1);
-  const isScrollToItemRef = useRef(false);
-  const scrollToRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
   const isSizeChanged = size.toString() !== prevSize?.toString();
   const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
@@ -59,12 +53,12 @@ export function useVirtual(
     });
   }, []);
 
-  const [sizeKey, offsetKey, scrollKey] = useMemo<MappingKeys>(() => {
+  const [sizeKey, offsetKey, scrollKey, scrollToKey] = useMemo<MappingKeys>(() => {
     if (horizontal) {
-      return ['width', 'marginLeft', 'scrollLeft'];
+      return ['width', 'marginLeft', 'scrollLeft', 'left'];
     }
 
-    return ['height', 'marginTop', 'scrollTop'];
+    return ['height', 'marginTop', 'scrollTop', 'top'];
   }, [horizontal]);
 
   const refreshMeasures = useStableCallback((start: number) => {
@@ -82,27 +76,79 @@ export function useVirtual(
     measuresRef.current = nextMeasures;
   });
 
-  const calcVisibility = useStableCallback((offset: number) => {
-    const { current: measures } = measuresRef;
-    const { current: viewport } = viewportRectRef;
-    const { current: remeasureIndex } = remeasureIndexRef;
+  const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
+    if (viewport) {
+      const { offset, smooth = false } = isNumber(value) ? { offset: value } : value;
 
-    if (remeasureIndex >= 0) {
-      refreshMeasures(remeasureIndex);
+      if (isNumber(offset)) {
+        if (rafRef.current != null) {
+          cancelAnimationFrame(rafRef.current);
+        }
 
-      remeasureIndexRef.current = -1;
+        const { current: prevOffset } = offsetRef;
+
+        if (offset !== prevOffset) {
+          const scrollTo = (offset: number): void => {
+            viewport.scrollTo({
+              behavior: 'auto',
+              [scrollToKey]: offset
+            });
+          };
+
+          if (smooth) {
+            const start = now();
+
+            const scroll = () => {
+              const distance = offset - prevOffset;
+              const config = getScrolling(scrolling);
+              const duration = getDuration(config.duration, Math.abs(distance));
+              const time = Math.min((now() - start) / duration, 1);
+
+              scrollTo(config.easing(time) * distance + prevOffset);
+
+              if (time < 1) {
+                rafRef.current = requestAnimationFrame(scroll);
+              } else {
+                callback?.();
+              }
+            };
+
+            rafRef.current = requestAnimationFrame(scroll);
+          } else {
+            scrollTo(offset);
+
+            callback?.();
+          }
+        }
+      }
     }
+  });
 
-    const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures, anchorRef.current);
+  const scrollToItem = useStableCallback<ScrollToItem>(() => {});
 
-    const oStart = Math.max(vStart - overscan, 0);
-    const oEnd = Math.min(vEnd + overscan, measures.length - 1);
+  const onVisibleChange = useStableCallback((offset: number) => {
+    const { current: prevOffset } = offsetRef;
 
-    const measure = measures[oEnd];
-    const frameOffset = measures[oStart].start;
-    const frameSize = measure.end - frameOffset;
+    if (offset !== prevOffset) {
+      const { current: measures } = measuresRef;
+      const { current: viewport } = viewportRectRef;
+      const { current: remeasureIndex } = remeasureIndexRef;
 
-    return { vStart, vEnd, oStart, oEnd, frameSize, frameOffset };
+      if (remeasureIndex >= 0) {
+        remeasureIndexRef.current = -1;
+
+        refreshMeasures(remeasureIndex);
+      }
+
+      const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures, anchorRef.current);
+
+      const oStart = Math.max(vStart - overscan, 0);
+      const oEnd = Math.min(vEnd + overscan, measures.length - 1);
+
+      const measure = measures[oEnd];
+      const frameOffset = measures[oStart].start;
+      const frameSize = measure.end - frameOffset;
+    }
   });
 
   useEffect(() => {
@@ -134,7 +180,11 @@ export function useVirtual(
   }, [frame]);
 
   useEffect(() => {
-    const onScroll = () => {};
+    const onScroll = () => {
+      if (viewport) {
+        offsetRef.current = viewport[scrollKey];
+      }
+    };
 
     if (viewport) {
       observerCallbacks.set(viewport, entry => {
@@ -160,11 +210,5 @@ export function useVirtual(
     };
   }, []);
 
-  return [
-    state.items,
-    {
-      scrollTo() {},
-      scrollToItem() {}
-    }
-  ];
+  return [state.items, { scrollTo, scrollToItem }];
 }
