@@ -2,7 +2,7 @@
  * @module utils
  */
 
-import { Duration, IndexRange, Measure, Scrolling, Size, Viewport } from './types';
+import { Duration, IndexRange, Measure, Scrolling, ScrollToItemOptions, ScrollToOptions, Size, Viewport } from './types';
 
 /**
  * @function easingImpl
@@ -68,6 +68,22 @@ export function getDuration(duration: Duration, distance: number): number {
  * @description 获取高精度当前时间
  */
 export const now = window.performance ? () => window.performance.now() : () => Date.now();
+
+/**
+ * @function getScrollToOptions
+ * @param value
+ */
+export function getScrollToOptions(value: number | ScrollToOptions): ScrollToOptions {
+  return isNumber(value) ? { offset: value } : value;
+}
+
+/**
+ * @function getScrollToItemOptions
+ * @param value
+ */
+export function getScrollToItemOptions(value: number | ScrollToItemOptions): ScrollToItemOptions {
+  return isNumber(value) ? { index: value } : value;
+}
 
 /**
  * @function getSize

@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  Align,
   Item,
   MappingKeys,
   Measure,
@@ -19,7 +20,16 @@ import {
 import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useStableCallback } from './useStableCallback';
-import { getDuration, getMeasure, getScrolling, getVisibleRange, isNumber, now } from '../utils';
+import {
+  getDuration,
+  getMeasure,
+  getScrolling,
+  getScrollToItemOptions,
+  getScrollToOptions,
+  getVisibleRange,
+  isNumber,
+  now
+} from '../utils';
 
 export function useVirtual(
   length: number,
@@ -61,7 +71,7 @@ export function useVirtual(
     return ['height', 'marginTop', 'scrollTop', 'top'];
   }, [horizontal]);
 
-  const refreshMeasures = useStableCallback((start: number) => {
+  const measure = useStableCallback((start: number) => {
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
 
@@ -76,18 +86,31 @@ export function useVirtual(
     measuresRef.current = nextMeasures;
   });
 
+  const remeasure = useStableCallback(() => {
+    const { current: remeasureIndex } = remeasureIndexRef;
+
+    if (remeasureIndex >= 0) {
+      measure(remeasureIndex);
+
+      remeasureIndexRef.current = -1;
+    }
+  });
+
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
-    if (viewport) {
-      const { offset, smooth = false } = isNumber(value) ? { offset: value } : value;
+    if (viewport && isMounted()) {
+      const { offset, smooth } = getScrollToOptions(value);
 
       if (isNumber(offset)) {
+        remeasure();
+
         if (rafRef.current != null) {
           cancelAnimationFrame(rafRef.current);
         }
 
         const { current: prevOffset } = offsetRef;
+        const nextOffset = Math.min(offset, viewport[scrollKey]);
 
-        if (offset !== prevOffset) {
+        if (nextOffset !== prevOffset) {
           const scrollTo = (offset: number): void => {
             viewport.scrollTo({
               behavior: 'auto',
@@ -97,25 +120,27 @@ export function useVirtual(
 
           if (smooth) {
             const start = now();
+            const config = getScrolling(scrolling);
+            const distance = nextOffset - prevOffset;
+            const duration = getDuration(config.duration, Math.abs(distance));
 
             const scroll = () => {
-              const distance = offset - prevOffset;
-              const config = getScrolling(scrolling);
-              const duration = getDuration(config.duration, Math.abs(distance));
-              const time = Math.min((now() - start) / duration, 1);
+              if (viewport && isMounted()) {
+                const time = Math.min((now() - start) / duration, 1);
 
-              scrollTo(config.easing(time) * distance + prevOffset);
+                scrollTo(config.easing(time) * distance + prevOffset);
 
-              if (time < 1) {
-                rafRef.current = requestAnimationFrame(scroll);
-              } else {
-                callback?.();
+                if (time < 1) {
+                  rafRef.current = requestAnimationFrame(scroll);
+                } else {
+                  callback?.();
+                }
               }
             };
 
             rafRef.current = requestAnimationFrame(scroll);
           } else {
-            scrollTo(offset);
+            scrollTo(nextOffset);
 
             callback?.();
           }
@@ -124,7 +149,15 @@ export function useVirtual(
     }
   });
 
-  const scrollToItem = useStableCallback<ScrollToItem>(() => {});
+  const scrollToItem = useStableCallback<ScrollToItem>((value, callback) => {
+    if (viewport && isMounted()) {
+      remeasure();
+
+      const { index, smooth, align } = getScrollToItemOptions(value);
+
+      console.log(index, smooth, align);
+    }
+  });
 
   const onVisibleChange = useStableCallback((offset: number) => {
     const { current: prevOffset } = offsetRef;
@@ -132,13 +165,8 @@ export function useVirtual(
     if (offset !== prevOffset) {
       const { current: measures } = measuresRef;
       const { current: viewport } = viewportRectRef;
-      const { current: remeasureIndex } = remeasureIndexRef;
 
-      if (remeasureIndex >= 0) {
-        remeasureIndexRef.current = -1;
-
-        refreshMeasures(remeasureIndex);
-      }
+      remeasure();
 
       const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures, anchorRef.current);
 
@@ -156,9 +184,9 @@ export function useVirtual(
     const { length: measuresLength } = measures;
 
     if (isSizeChanged) {
-      refreshMeasures(0);
+      measure(0);
     } else if (measuresLength !== length) {
-      refreshMeasures(Math.min(length, measuresLength));
+      measure(Math.min(length, measuresLength));
     }
   }, [length, isSizeChanged]);
 
@@ -181,7 +209,7 @@ export function useVirtual(
 
   useEffect(() => {
     const onScroll = () => {
-      if (viewport) {
+      if (viewport && isMounted()) {
         offsetRef.current = viewport[scrollKey];
       }
     };
