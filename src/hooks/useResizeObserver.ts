@@ -16,6 +16,10 @@ export interface Observe {
   (target: Element, callback: ObserverCallback, options?: ResizeObserverOptions): void;
 }
 
+/**
+ * @function useResizeObserver
+ * @description [hook] 监听元素尺寸变化
+ */
 export function useResizeObserver(): [observe: Observe, unobserve: Unobserve] {
   const callbacks = useMemo(() => {
     return new Map<Element, ObserverCallback>();
