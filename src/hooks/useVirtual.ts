@@ -168,7 +168,7 @@ export function useVirtual(
     }
   });
 
-  const updateVirtualItems = useStableCallback((offset: number) => {
+  const setVirtualItems = useStableCallback((offset: number) => {
     const { current: prevOffset } = offsetRef;
 
     if (offset !== prevOffset) {
@@ -228,7 +228,7 @@ export function useVirtual(
       if (viewport && isMounted()) {
         const offset = viewport[scrollKey];
 
-        updateVirtualItems(offset);
+        setVirtualItems(offset);
 
         offsetRef.current = offset;
       }
