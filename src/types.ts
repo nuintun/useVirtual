@@ -14,11 +14,19 @@ export type OffsetKey = 'marginLeft' | 'marginTop';
 
 export type IndexRange = [start: number, end: number];
 
+export type ScrollSizeKey = 'scrollWidth' | 'scrollHeight';
+
 export type Duration = number | ((distance: number) => number);
 
 export type Size = number | ((index: number, viewport: Viewport) => number);
 
-export type MappingKeys = [sizeKey: SizeKey, offsetKey: OffsetKey, scrollKey: ScrollKey, scrollToKey: ScrollToKey];
+export type MappingKeys = [
+  sizeKey: SizeKey,
+  offsetKey: OffsetKey,
+  scrollKey: ScrollKey,
+  scrollToKey: ScrollToKey,
+  scrollSizeKey: ScrollSizeKey
+];
 
 export interface Measure {
   end: number;
@@ -40,16 +48,6 @@ export interface Item {
   readonly scrolling?: true;
   readonly viewport: Viewport;
   readonly measure: (element: Element | null) => void;
-}
-
-export interface Frame {
-  size: number;
-  offset: number;
-}
-
-export interface State {
-  frame: Frame;
-  items: Item[];
 }
 
 export interface LoadEvent {
@@ -97,8 +95,8 @@ export interface Options {
   onScroll?: OnScroll;
   horizontal?: boolean;
   scrolling?: Scrolling;
-  frame: Element | null;
-  viewport: Element | null;
+  frame: HTMLElement | null;
+  viewport: HTMLElement | null;
 }
 
 export interface ScrollToOptions {

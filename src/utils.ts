@@ -135,13 +135,13 @@ export function binarySearch(start: number, end: number, target: number, getTarg
 }
 
 /**
- * @function getVisibleRange
+ * @function getVirtualRange
  * @param size 视窗尺寸
  * @param offset 视窗滚动偏移
  * @param measures 缓存的尺寸数组
  * @param anchor 锚点尺寸数据
  */
-export function getVisibleRange(size: number, offset: number, measures: Measure[], anchor?: Measure): IndexRange {
+export function getVirtualRange(size: number, offset: number, measures: Measure[], anchor?: Measure): IndexRange {
   let start: number;
 
   const maxIndex = measures.length - 1;

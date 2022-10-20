@@ -14,26 +14,25 @@ import {
   Options,
   ScrollTo,
   ScrollToItem,
-  State,
   Viewport
 } from '../types';
-import { usePrevious } from './usePrevious';
-import { useIsMounted } from './useIsMounted';
-import { useStableCallback } from './useStableCallback';
 import {
   getDuration,
   getMeasure,
   getScrolling,
   getScrollToItemOptions,
   getScrollToOptions,
-  getVisibleRange,
+  getVirtualRange,
   isNumber,
   now
 } from '../utils';
+import { usePrevious } from './usePrevious';
+import { useIsMounted } from './useIsMounted';
+import { useStableCallback } from './useStableCallback';
 
 export function useVirtual(
   length: number,
-  { size, frame, onLoad, viewport, infinite, stickies, onResize, onScroll, horizontal, overscan = 10, scrolling }: Options
+  { size, frame, onLoad, infinite, onResize, onScroll, stickies, viewport, scrolling, horizontal, overscan = 10 }: Options
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
   const rafRef = useRef<number>();
@@ -42,13 +41,10 @@ export function useVirtual(
   const anchorRef = useRef<Measure>();
   const remeasureIndexRef = useRef(-1);
   const measuresRef = useRef<Measure[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const isSizeChanged = size.toString() !== prevSize?.toString();
   const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
   const observerCallbacks = useMemo(() => new Map<Element, ObserverCallback>(), []);
-
-  const [state, setState] = useState<State>(() => {
-    return { items: [], frame: { size: 0, offset: 0 } };
-  });
 
   const observer = useMemo(() => {
     return new ResizeObserver((entries, observer) => {
@@ -63,12 +59,12 @@ export function useVirtual(
     });
   }, []);
 
-  const [sizeKey, offsetKey, scrollKey, scrollToKey] = useMemo<MappingKeys>(() => {
+  const [sizeKey, offsetKey, scrollKey, scrollToKey, scrollSizeKey] = useMemo<MappingKeys>(() => {
     if (horizontal) {
-      return ['width', 'marginLeft', 'scrollLeft', 'left'];
+      return ['width', 'marginLeft', 'scrollLeft', 'left', 'scrollWidth'];
     }
 
-    return ['height', 'marginTop', 'scrollTop', 'top'];
+    return ['height', 'marginTop', 'scrollTop', 'top', 'scrollHeight'];
   }, [horizontal]);
 
   const measure = useStableCallback((start: number) => {
@@ -108,7 +104,7 @@ export function useVirtual(
         }
 
         const { current: prevOffset } = offsetRef;
-        const nextOffset = Math.min(offset, viewport[scrollKey]);
+        const nextOffset = Math.min(offset, viewport[scrollSizeKey]);
 
         if (nextOffset !== prevOffset) {
           const scrollTo = (offset: number): void => {
@@ -156,10 +152,23 @@ export function useVirtual(
       const { index, smooth, align } = getScrollToItemOptions(value);
 
       console.log(index, smooth, align);
+
+      switch (align) {
+        case Align.start:
+          break;
+        case Align.center:
+          break;
+        case Align.end:
+          break;
+        default:
+          break;
+      }
+
+      callback?.();
     }
   });
 
-  const onVisibleChange = useStableCallback((offset: number) => {
+  const updateVirtualItems = useStableCallback((offset: number) => {
     const { current: prevOffset } = offsetRef;
 
     if (offset !== prevOffset) {
@@ -168,14 +177,21 @@ export function useVirtual(
 
       remeasure();
 
-      const [vStart, vEnd] = getVisibleRange(viewport[sizeKey], offset, measures, anchorRef.current);
+      const [start, end] = getVirtualRange(viewport[sizeKey], offset, measures, anchorRef.current);
 
-      const oStart = Math.max(vStart - overscan, 0);
-      const oEnd = Math.min(vEnd + overscan, measures.length - 1);
+      const overscanStart = Math.max(start - overscan, 0);
+      const overscanEnd = Math.min(end + overscan, measures.length - 1);
 
-      const measure = measures[oEnd];
-      const frameOffset = measures[oStart].start;
-      const frameSize = measure.end - frameOffset;
+      if (frame) {
+        const { style } = frame;
+        const { end } = measures[overscanEnd];
+        const { start } = measures[overscanStart];
+
+        style[offsetKey] = `${start}px`;
+        style[sizeKey] = `${end - start}px`;
+      }
+
+      setItems([]);
     }
   });
 
@@ -210,7 +226,11 @@ export function useVirtual(
   useEffect(() => {
     const onScroll = () => {
       if (viewport && isMounted()) {
-        offsetRef.current = viewport[scrollKey];
+        const offset = viewport[scrollKey];
+
+        updateVirtualItems(offset);
+
+        offsetRef.current = offset;
       }
     };
 
@@ -238,5 +258,5 @@ export function useVirtual(
     };
   }, []);
 
-  return [state.items, { scrollTo, scrollToItem }];
+  return [items, { scrollTo, scrollToItem }];
 }
