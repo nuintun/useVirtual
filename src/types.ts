@@ -129,7 +129,3 @@ export interface Methods {
   scrollTo: ScrollTo;
   scrollToItem: ScrollToItem;
 }
-
-export interface ObserverCallback {
-  (entry: ResizeObserverEntry, observer: ResizeObserver): void;
-}
