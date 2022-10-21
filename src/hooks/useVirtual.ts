@@ -209,9 +209,7 @@ export function useVirtual(
                   remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
 
                   refreshRafRef.current = requestAnimationFrame(() => {
-                    remeasure();
-
-                    setVirtualItems(offset);
+                    setVirtualItems(offsetRef.current);
                   });
                 }
               });
