@@ -100,6 +100,7 @@ export function useVirtual(
             const duration = getDuration(config.duration, Math.abs(distance));
 
             abortAnimationFrame(scrollRafRef.current);
+            abortAnimationFrame(refreshRafRef.current);
 
             const scroll = () => {
               if (viewport && isMounted()) {
@@ -263,6 +264,8 @@ export function useVirtual(
         if (viewport && isMounted()) {
           const offset = viewport[scrollKey];
 
+          abortAnimationFrame(scrollRafRef.current);
+          abortAnimationFrame(refreshRafRef.current);
           setVirtualItems(offset, onScroll);
 
           offsetRef.current = offset;
