@@ -8,12 +8,12 @@ export interface Unobserve {
   (target: Element): void;
 }
 
-export interface ObserverCallback {
-  (entry: ResizeObserverEntry, observer: ResizeObserver): void;
+export interface ResizeObserverCallback {
+  (entry: ResizeObserverEntry): void;
 }
 
 export interface Observe {
-  (target: Element, callback: ObserverCallback, options?: ResizeObserverOptions): void;
+  (target: Element, callback: ResizeObserverCallback, options?: ResizeObserverOptions): void;
 }
 
 /**
@@ -22,17 +22,17 @@ export interface Observe {
  */
 export function useResizeObserver(): [observe: Observe, unobserve: Unobserve] {
   const callbacks = useMemo(() => {
-    return new Map<Element, ObserverCallback>();
+    return new Map<Element, ResizeObserverCallback>();
   }, []);
 
   const observer = useMemo(() => {
-    return new ResizeObserver((entries, observer) => {
+    return new ResizeObserver(entries => {
       for (const entry of entries) {
         const { target } = entry;
         const callback = callbacks.get(target);
 
         if (callback) {
-          callback(entry, observer);
+          callback(entry);
         }
       }
     });

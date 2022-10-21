@@ -12,6 +12,8 @@ export type ScrollKey = 'scrollLeft' | 'scrollTop';
 
 export type OffsetKey = 'marginLeft' | 'marginTop';
 
+export type BoxSizeKey = 'inlineSize' | 'blockSize';
+
 export type IndexRange = [start: number, end: number];
 
 export type ScrollSizeKey = 'scrollWidth' | 'scrollHeight';
@@ -24,6 +26,7 @@ export type MappingKeys = [
   sizeKey: SizeKey,
   offsetKey: OffsetKey,
   scrollKey: ScrollKey,
+  boxSizeKey: BoxSizeKey,
   scrollToKey: ScrollToKey,
   scrollSizeKey: ScrollSizeKey
 ];
@@ -44,8 +47,7 @@ export interface Item {
   readonly size: number;
   readonly index: number;
   readonly start: number;
-  readonly sticky?: true;
-  readonly scrolling?: true;
+  readonly sticky: boolean;
   readonly viewport: Viewport;
   readonly measure: (element: Element | null) => void;
 }
