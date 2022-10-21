@@ -83,9 +83,7 @@ export function useVirtual(
         const nextOffset = getOffset(offset);
         const { current: prevOffset } = offsetRef;
 
-        if (nextOffset !== prevOffset) {
-          remeasure();
-
+        if (nextOffset !== prevOffset || remeasureIndexRef.current >= 0) {
           const scrollTo = (offset: number): void => {
             viewport.scrollTo({
               behavior: 'auto',
