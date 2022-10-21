@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import {
+  abortAnimationFrame,
   getDuration,
   getMeasure,
   getScrolling,
@@ -96,12 +97,9 @@ export function useVirtual(
             const start = now();
             const config = getScrolling(scrolling);
             const distance = nextOffset - prevOffset;
-            const { current: scrollRaf } = scrollRafRef;
             const duration = getDuration(config.duration, Math.abs(distance));
 
-            if (scrollRaf != null) {
-              cancelAnimationFrame(scrollRaf);
-            }
+            abortAnimationFrame(scrollRafRef.current);
 
             const scroll = () => {
               if (viewport && isMounted()) {
@@ -203,11 +201,7 @@ export function useVirtual(
                 const size = borderBoxSize[boxSizeKey];
 
                 if (size !== measure.size) {
-                  const { current: refreshRaf } = refreshRafRef;
-
-                  if (refreshRaf != null) {
-                    cancelAnimationFrame(refreshRaf);
-                  }
+                  abortAnimationFrame(refreshRafRef.current);
 
                   measures[index] = getMeasure(index, measures, size, viewport);
 

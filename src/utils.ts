@@ -41,6 +41,16 @@ export function isFunction(value: unknown): value is Function {
 }
 
 /**
+ * @function abortAnimationFrame
+ * @param handle
+ */
+export function abortAnimationFrame(handle: number | null | undefined): void {
+  if (handle != null) {
+    cancelAnimationFrame(handle);
+  }
+}
+
+/**
  * @function getScrolling
  * @param scrolling
  */
