@@ -24,7 +24,7 @@ import { Align, Item, MappingKeys, Measure, Methods, OnScroll, Options, ScrollTo
 
 export function useVirtual(
   length: number,
-  { size, frame, onLoad, onResize, onScroll, stickies = [], viewport, scrolling, horizontal, overscan = 10 }: Options
+  { size, frame, onLoad, onResize, onScroll, viewport, scrolling, horizontal, overscan = 10, stickies = [] }: Options
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
@@ -254,7 +254,7 @@ export function useVirtual(
 
   useEffect(() => {
     if (viewport) {
-      const onScroll = () => {
+      const onScrollChange = () => {
         if (viewport && isMounted()) {
           const offset = viewport[scrollKey];
 
@@ -284,12 +284,12 @@ export function useVirtual(
         }
       });
 
-      viewport.addEventListener('scroll', onScroll, { passive: true });
+      viewport.addEventListener('scroll', onScrollChange, { passive: true });
 
       return () => {
         unobserve(viewport);
 
-        viewport.removeEventListener('scroll', onScroll);
+        viewport.removeEventListener('scroll', onScrollChange);
       };
     }
   }, [viewport, sizeKey, offsetKey, scrollKey]);
