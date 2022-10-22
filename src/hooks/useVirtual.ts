@@ -32,6 +32,7 @@ export function useVirtual(
   const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
   const refreshRafRef = useRef<number>();
+  const isScrollToItemRef = useRef(false);
   const measuresRef = useRef<Measure[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [observe, unobserve] = useResizeObserver();
@@ -79,6 +80,12 @@ export function useVirtual(
     if (viewport && isMounted()) {
       const { offset, smooth } = getScrollToOptions(value);
 
+      const onComplete = () => {
+        if (isFunction(callback)) {
+          callback();
+        }
+      };
+
       if (isNumber(offset) && offset >= 0) {
         const nextOffset = getOffset(offset);
         const { current: prevOffset } = offsetRef;
@@ -109,7 +116,7 @@ export function useVirtual(
                 if (time < 1) {
                   scrollRafRef.current = requestAnimationFrame(scroll);
                 } else {
-                  callback?.();
+                  onComplete();
                 }
               }
             };
@@ -118,9 +125,11 @@ export function useVirtual(
           } else {
             scrollTo(nextOffset);
 
-            callback?.();
+            onComplete();
           }
         }
+      } else {
+        onComplete();
       }
     }
   });
@@ -156,11 +165,17 @@ export function useVirtual(
               break;
           }
 
+          isScrollToItemRef.current = true;
+
           scrollTo({ offset, smooth }, () => {
             if (remeasureIndexRef.current >= 0) {
               scrollToItem(value, callback);
             } else {
-              callback?.();
+              isScrollToItemRef.current = false;
+
+              if (isFunction(callback)) {
+                callback();
+              }
             }
           });
         }
@@ -214,15 +229,17 @@ export function useVirtual(
                 const size = borderBoxSize[boxSizeKey];
 
                 if (size !== measure.size) {
-                  abortAnimationFrame(refreshRafRef.current);
-
                   measures[index] = getMeasure(index, measures, size, viewport);
 
                   remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
 
-                  refreshRafRef.current = requestAnimationFrame(() => {
-                    setVirtualItems(offsetRef.current);
-                  });
+                  if (!isScrollToItemRef.current) {
+                    abortAnimationFrame(refreshRafRef.current);
+
+                    refreshRafRef.current = requestAnimationFrame(() => {
+                      setVirtualItems(offsetRef.current);
+                    });
+                  }
                 }
               });
             }
