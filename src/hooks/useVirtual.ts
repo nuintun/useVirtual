@@ -145,7 +145,7 @@ export function useVirtual(
 
           let { current: offset } = offsetRef;
 
-          const { start, size, end } = measures[index];
+          const { start, size } = measures[index];
           const viewportSize = viewportRectRef.current[sizeKey];
           const { end: scrollSize } = measures[measures.length - 1];
 
