@@ -24,7 +24,7 @@ import { Align, Item, MappingKeys, Measure, Methods, OnScroll, Options, ScrollTo
 
 export function useVirtual(
   length: number,
-  { size, frame, onLoad, onResize, onScroll, viewport, scrolling, horizontal, overscan = 10, stickies = [] }: Options
+  { size, frame, onLoad, onResize, onScroll, viewport, scrolling, horizontal, overscan = 10 }: Options
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
@@ -216,9 +216,9 @@ export function useVirtual(
       items.push({
         index,
         viewport,
+        end: measure.end,
         size: measure.size,
         start: measure.start,
-        sticky: stickies.includes(index),
         measure(element: Element | null): void {
           if (element) {
             if (element !== prevElement) {
@@ -288,7 +288,6 @@ export function useVirtual(
         if (viewport && isMounted()) {
           const offset = viewport[scrollKey];
 
-          abortAnimationFrame(scrollRafRef.current);
           abortAnimationFrame(refreshRafRef.current);
           setVirtualItems(offset, onScroll);
 

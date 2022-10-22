@@ -44,10 +44,10 @@ export interface Viewport {
 }
 
 export interface Item {
+  readonly end: number;
   readonly size: number;
   readonly index: number;
   readonly start: number;
-  readonly sticky: boolean;
   readonly viewport: Viewport;
   readonly measure: (element: Element | null) => void;
 }
@@ -91,7 +91,6 @@ export interface Options {
   size: Size;
   onLoad?: onLoad;
   overscan?: number;
-  stickies?: number[];
   onResize?: OnResize;
   onScroll?: OnScroll;
   horizontal?: boolean;
