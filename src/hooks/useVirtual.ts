@@ -76,7 +76,7 @@ export function useVirtual(
   });
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
-    if (viewport && isMounted()) {
+    if (isMounted()) {
       const onComplete = () => {
         if (isFunction(callback)) {
           callback();
@@ -91,10 +91,12 @@ export function useVirtual(
 
         if (nextOffset !== prevOffset || remeasureIndexRef.current >= 0) {
           const scrollTo = (offset: number): void => {
-            viewport.scrollTo({
-              behavior: 'auto',
-              [scrollToKey]: offset
-            });
+            if (viewport) {
+              viewport.scrollTo({
+                behavior: 'auto',
+                [scrollToKey]: offset
+              });
+            }
           };
 
           if (smooth) {
@@ -134,7 +136,7 @@ export function useVirtual(
   });
 
   const scrollToItem = useStableCallback<ScrollToItem>((value, callback) => {
-    if (viewport && isMounted()) {
+    if (isMounted()) {
       const { index, smooth, align } = getScrollToItemOptions(value);
 
       if (isNumber(index) && index >= 0) {
@@ -185,89 +187,89 @@ export function useVirtual(
   });
 
   const setVirtualItems = useStableCallback((offset: number, onScroll?: OnScroll) => {
-    remeasure();
+    if (isMounted()) {
+      remeasure();
 
-    const nextOffset = getOffset(offset);
-    const { current: measures } = measuresRef;
-    const { current: viewport } = viewportRectRef;
+      const nextOffset = getOffset(offset);
+      const { current: measures } = measuresRef;
+      const { current: viewport } = viewportRectRef;
 
-    const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorRef.current);
+      const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorRef.current);
 
-    const maxIndex = measures.length - 1;
-    const overscanStart = Math.max(start - overscan, 0);
-    const overscanEnd = Math.min(end + overscan, maxIndex);
+      const maxIndex = measures.length - 1;
+      const overscanStart = Math.max(start - overscan, 0);
+      const overscanEnd = Math.min(end + overscan, maxIndex);
 
-    if (frame) {
-      const { style } = frame;
-      const { end } = measures[overscanEnd];
-      const { start } = measures[overscanStart];
+      // const { style } = frame;
+      // const { end } = measures[overscanEnd];
+      // const { start } = measures[overscanStart];
 
-      style[offsetKey] = `${start}px`;
-      style[sizeKey] = `${end - start}px`;
-    }
+      // style[offsetKey] = `${start}px`;
+      // style[sizeKey] = `${end - start}px`;
 
-    const items: Item[] = [];
+      const items: Item[] = [];
 
-    for (let index = start; index <= end; index++) {
-      const measure = measures[index];
+      for (let index = start; index <= end; index++) {
+        const measure = measures[index];
 
-      let prevElement: Element | null = null;
+        let prevElement: Element | null = null;
 
-      items.push({
-        index,
-        viewport,
-        end: measure.end,
-        size: measure.size,
-        start: measure.start,
-        measure(element: Element | null): void {
-          if (element) {
-            if (element !== prevElement) {
-              if (prevElement) {
-                unobserve(prevElement);
-              }
-
-              observe(element, ({ borderBoxSize: [borderBoxSize] }) => {
-                const size = borderBoxSize[boxSizeKey];
-
-                if (size !== measure.size) {
-                  abortAnimationFrame(refreshRafRef.current);
-
-                  measures[index] = getMeasure(index, measures, size, viewport);
-
-                  remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
-
-                  refreshRafRef.current = requestAnimationFrame(() => {
-                    setVirtualItems(offsetRef.current);
-                  });
+        items.push({
+          index,
+          viewport,
+          end: measure.end,
+          size: measure.size,
+          start: measure.start,
+          measure(element: Element | null): void {
+            if (element) {
+              if (element !== prevElement) {
+                if (prevElement) {
+                  unobserve(prevElement);
                 }
-              });
+
+                observe(element, ({ borderBoxSize: [borderBoxSize] }) => {
+                  const size = borderBoxSize[boxSizeKey];
+
+                  if (size !== measure.size) {
+                    abortAnimationFrame(refreshRafRef.current);
+
+                    measures[index] = getMeasure(index, measures, size, viewport);
+
+                    remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
+
+                    refreshRafRef.current = requestAnimationFrame(() => {
+                      setVirtualItems(offsetRef.current);
+                    });
+                  }
+                });
+              }
+            } else if (prevElement) {
+              unobserve(prevElement);
             }
-          } else if (prevElement) {
-            unobserve(prevElement);
+
+            prevElement = element;
           }
+        });
+      }
 
-          prevElement = element;
-        }
-      });
-    }
+      setItems(items);
 
-    setItems(items);
+      if (isFunction(onScroll)) {
+        onScroll({
+          offset: nextOffset,
+          visible: [start, end],
+          overscan: [overscanStart, overscanEnd],
+          forward: nextOffset > offsetRef.current
+        });
+      }
 
-    if (isFunction(onScroll)) {
-      onScroll({
-        offset: nextOffset,
-        visible: [start, end],
-        overscan: [overscanStart, overscanEnd],
-        forward: nextOffset > offsetRef.current
-      });
-    }
-
-    if (overscanEnd >= maxIndex && isFunction(onLoad)) {
-      onLoad({
-        offset: nextOffset,
-        visible: [start, end],
-        overscan: [overscanStart, overscanEnd]
-      });
+      if (overscanEnd >= maxIndex && isFunction(onLoad)) {
+        onLoad({
+          offset: nextOffset,
+          visible: [start, end],
+          overscan: [overscanStart, overscanEnd]
+        });
+      }
     }
   });
 
