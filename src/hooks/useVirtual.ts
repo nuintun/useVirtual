@@ -213,16 +213,16 @@ export function useVirtual(
       const items: Item[] = [];
 
       for (let index = start; index <= end; index++) {
-        const measure = measures[index];
-
         let prevElement: Element | null = null;
 
+        const { start, size, end } = measures[index];
+
         items.push({
+          end,
+          size,
           index,
+          start,
           viewport,
-          end: measure.end,
-          size: measure.size,
-          start: measure.start,
           measure(element) {
             if (element) {
               if (element !== prevElement) {
@@ -231,12 +231,12 @@ export function useVirtual(
                 }
 
                 observe(element, ({ borderBoxSize: [borderBoxSize] }) => {
-                  const size = borderBoxSize[boxSizeKey];
+                  const nextSize = borderBoxSize[boxSizeKey];
 
-                  if (size !== measure.size) {
+                  if (nextSize !== size) {
                     abortAnimationFrame(refreshRafRef.current);
 
-                    measures[index] = getMeasure(index, measures, size, viewport);
+                    measures[index] = getMeasure(index, measures, nextSize, viewport);
 
                     remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
 
