@@ -77,13 +77,13 @@ export function useVirtual(
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
     if (viewport && isMounted()) {
-      const { offset, smooth } = getScrollToOptions(value);
-
       const onComplete = () => {
         if (isFunction(callback)) {
           callback();
         }
       };
+
+      const { offset, smooth } = getScrollToOptions(value);
 
       if (isNumber(offset) && offset >= 0) {
         const nextOffset = getOffset(offset);
