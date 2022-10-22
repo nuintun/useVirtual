@@ -32,7 +32,6 @@ export function useVirtual(
   const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
   const refreshRafRef = useRef<number>();
-  const isScrollToItemRef = useRef(false);
   const measuresRef = useRef<Measure[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [observe, unobserve] = useResizeObserver();
@@ -146,7 +145,7 @@ export function useVirtual(
 
           let { current: offset } = offsetRef;
 
-          const { start, size } = measures[index];
+          const { start, size, end } = measures[index];
           const viewportSize = viewportRectRef.current[sizeKey];
           const { end: scrollSize } = measures[measures.length - 1];
 
@@ -165,17 +164,11 @@ export function useVirtual(
               break;
           }
 
-          isScrollToItemRef.current = true;
-
           scrollTo({ offset, smooth }, () => {
-            if (remeasureIndexRef.current >= 0) {
+            if (remeasureIndexRef.current <= index) {
               scrollToItem(value, callback);
-            } else {
-              isScrollToItemRef.current = false;
-
-              if (isFunction(callback)) {
-                callback();
-              }
+            } else if (isFunction(callback)) {
+              callback();
             }
           });
         }
@@ -229,17 +222,15 @@ export function useVirtual(
                 const size = borderBoxSize[boxSizeKey];
 
                 if (size !== measure.size) {
+                  abortAnimationFrame(refreshRafRef.current);
+
                   measures[index] = getMeasure(index, measures, size, viewport);
 
                   remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
 
-                  if (!isScrollToItemRef.current) {
-                    abortAnimationFrame(refreshRafRef.current);
-
-                    refreshRafRef.current = requestAnimationFrame(() => {
-                      setVirtualItems(offsetRef.current);
-                    });
-                  }
+                  refreshRafRef.current = requestAnimationFrame(() => {
+                    setVirtualItems(offsetRef.current);
+                  });
                 }
               });
             }
