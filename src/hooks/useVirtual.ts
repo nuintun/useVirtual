@@ -173,7 +173,7 @@ export function useVirtual(
               const measure = measures[index];
 
               if (measure.start !== start || measure.end !== end) {
-                scrollToItem(value, callback);
+                scrollToItem({ index, smooth, align }, callback);
               } else if (isFunction(callback)) {
                 callback();
               }

@@ -106,7 +106,8 @@ export interface ScrollToOptions {
 }
 
 export interface ScrollTo {
-  (value: number | ScrollToOptions, callback?: () => void): void;
+  (offset: number, callback?: () => void): void;
+  (options: ScrollToOptions, callback?: () => void): void;
 }
 
 export enum Align {
@@ -123,7 +124,8 @@ export interface ScrollToItemOptions {
 }
 
 export interface ScrollToItem {
-  (index: number | ScrollToItemOptions, callback?: () => void): void;
+  (index: number, callback?: () => void): void;
+  (options: ScrollToItemOptions, callback?: () => void): void;
 }
 
 export interface Methods {
