@@ -52,6 +52,11 @@ export interface Item {
   readonly measure: (element: Element | null) => void;
 }
 
+export interface State {
+  items: Item[];
+  frame: [start: number, end: number];
+}
+
 export interface LoadEvent {
   readonly offset: number;
   readonly visible: IndexRange;

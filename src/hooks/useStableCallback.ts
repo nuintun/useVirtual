@@ -3,7 +3,6 @@
  */
 
 import { useCallback } from 'react';
-
 import { useLatestRef } from './useLatestRef';
 
 export interface Callback {
