@@ -156,7 +156,13 @@ export function useVirtual(
               break;
           }
 
-          scrollTo({ offset, smooth }, callback);
+          scrollTo({ offset, smooth }, () => {
+            if (remeasureIndexRef.current >= 0) {
+              scrollToItem(value, callback);
+            } else {
+              callback?.();
+            }
+          });
         }
       }
     }
