@@ -24,7 +24,7 @@ import { Align, Item, MappingKeys, Measure, Methods, OnScroll, Options, ScrollTo
 
 export function useVirtual(
   length: number,
-  { size, frame, onLoad, infinite, onResize, onScroll, stickies = [], viewport, scrolling, horizontal, overscan = 10 }: Options
+  { size, frame, onLoad, onResize, onScroll, stickies = [], viewport, scrolling, horizontal, overscan = 10 }: Options
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
@@ -232,14 +232,12 @@ export function useVirtual(
       });
     }
 
-    if (infinite && overscanEnd >= maxIndex) {
-      if (isFunction(onLoad)) {
-        onLoad({
-          offset: nextOffset,
-          visible: [start, end],
-          overscan: [overscanStart, overscanEnd]
-        });
-      }
+    if (overscanEnd >= maxIndex && isFunction(onLoad)) {
+      onLoad({
+        offset: nextOffset,
+        visible: [start, end],
+        overscan: [overscanStart, overscanEnd]
+      });
     }
   });
 
@@ -268,7 +266,23 @@ export function useVirtual(
         }
       };
 
-      observe(viewport, onScroll);
+      observe(viewport, ({ borderBoxSize: [borderBoxSize] }) => {
+        const viewport: Viewport = {
+          width: borderBoxSize.blockSize,
+          height: borderBoxSize.inlineSize
+        };
+        const { current: prevViewport } = viewportRectRef;
+
+        if (viewport[sizeKey] !== prevViewport[sizeKey]) {
+          viewportRectRef.current = viewport;
+
+          setVirtualItems(offsetRef.current);
+
+          if (isFunction(onResize)) {
+            onResize(viewport);
+          }
+        }
+      });
 
       viewport.addEventListener('scroll', onScroll, { passive: true });
 

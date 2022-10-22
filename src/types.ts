@@ -91,7 +91,6 @@ export interface Options {
   size: Size;
   onLoad?: onLoad;
   overscan?: number;
-  infinite?: boolean;
   stickies?: number[];
   onResize?: OnResize;
   onScroll?: OnScroll;
