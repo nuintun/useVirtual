@@ -49,7 +49,7 @@ export interface Item {
   readonly index: number;
   readonly start: number;
   readonly viewport: Viewport;
-  readonly measure: (element: Element | null) => void;
+  readonly measure: (element: HTMLElement | null) => void;
 }
 
 export interface State {

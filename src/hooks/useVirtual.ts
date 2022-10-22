@@ -223,7 +223,7 @@ export function useVirtual(
           end: measure.end,
           size: measure.size,
           start: measure.start,
-          measure(element: Element | null): void {
+          measure(element): void {
             if (element) {
               if (element !== prevElement) {
                 if (prevElement) {
