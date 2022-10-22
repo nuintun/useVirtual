@@ -79,7 +79,7 @@ export function useVirtual(
     if (viewport && isMounted()) {
       const { offset, smooth } = getScrollToOptions(value);
 
-      if (isNumber(offset)) {
+      if (isNumber(offset) && offset >= 0) {
         const nextOffset = getOffset(offset);
         const { current: prevOffset } = offsetRef;
 
@@ -129,18 +129,26 @@ export function useVirtual(
     if (viewport && isMounted()) {
       const { index, smooth, align } = getScrollToItemOptions(value);
 
-      if (isNumber(index)) {
+      if (isNumber(index) && index >= 0) {
         const { current: measures } = measuresRef;
 
         if (index < measures.length - 1) {
           remeasure();
 
-          console.log(index, smooth, align);
+          let { current: offset } = offsetRef;
+
+          const { start, size } = measures[index];
+          const viewportSize = viewportRectRef.current[sizeKey];
+          const { end: scrollSize } = measures[measures.length - 1];
 
           switch (align) {
             case Align.start:
+              offset = scrollSize - start <= viewportSize ? scrollSize - viewportSize : start;
               break;
             case Align.center:
+              const to = start - viewportSize / 2 + size / 2;
+
+              offset = scrollSize - to <= viewportSize ? scrollSize - viewportSize : to;
               break;
             case Align.end:
               break;
@@ -148,7 +156,7 @@ export function useVirtual(
               break;
           }
 
-          callback?.();
+          scrollTo({ offset, smooth }, callback);
         }
       }
     }
