@@ -140,12 +140,12 @@ export function useVirtual(
       if (isNumber(index) && index >= 0) {
         const { current: measures } = measuresRef;
 
-        if (index < measures.length - 1) {
+        if (index < measures.length) {
           remeasure();
 
           let { current: offset } = offsetRef;
 
-          const { start, size } = measures[index];
+          const { start, size, end } = measures[index];
           const viewportSize = viewportRectRef.current[sizeKey];
           const { end: scrollSize } = measures[measures.length - 1];
 
@@ -165,10 +165,18 @@ export function useVirtual(
           }
 
           scrollTo({ offset, smooth }, () => {
-            if (remeasureIndexRef.current <= index) {
-              scrollToItem(value, callback);
-            } else if (isFunction(callback)) {
-              callback();
+            remeasure();
+
+            const { current: measures } = measuresRef;
+
+            if (index < measures.length) {
+              const measure = measures[index];
+
+              if (measure.start !== start || measure.end !== end) {
+                scrollToItem(value, callback);
+              } else if (isFunction(callback)) {
+                callback();
+              }
             }
           });
         }
