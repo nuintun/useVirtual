@@ -200,7 +200,7 @@ export function useVirtual(
     }
   });
 
-  const updateVirtual = useStableCallback((offset: number, onScroll?: OnScroll) => {
+  const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
     if (isMounted()) {
       remeasure();
 
@@ -239,7 +239,7 @@ export function useVirtual(
                     remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
 
                     refreshRafRef.current = requestAnimationFrame(() => {
-                      updateVirtual(offsetRef.current);
+                      update(offsetRef.current);
                     });
                   }
                 });
@@ -297,10 +297,10 @@ export function useVirtual(
 
     if (isSizeChanged) {
       measure(0);
-      updateVirtual(offsetRef.current);
+      update(offsetRef.current);
     } else if (measuresLength !== length) {
       measure(Math.min(length, measuresLength));
-      updateVirtual(offsetRef.current);
+      update(offsetRef.current);
     }
   }, [length, isSizeChanged]);
 
@@ -311,7 +311,7 @@ export function useVirtual(
           const offset = viewport[scrollKey];
 
           abortAnimationFrame(refreshRafRef.current);
-          updateVirtual(offset, onScrollRef.current);
+          update(offset, onScrollRef.current);
 
           offsetRef.current = offset;
         }
@@ -327,7 +327,7 @@ export function useVirtual(
         if (viewport[sizeKey] !== prevViewport[sizeKey]) {
           viewportRectRef.current = viewport;
 
-          updateVirtual(offsetRef.current);
+          update(offsetRef.current);
 
           const { current: onResize } = onResizeRef;
 
