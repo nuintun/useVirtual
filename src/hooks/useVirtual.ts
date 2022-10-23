@@ -33,6 +33,7 @@ import { useLatestRef } from './useLatestRef';
 import { useStableCallback } from './useStableCallback';
 import { useResizeObserver } from './useResizeObserver';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useMeasureItem } from './useMeasureItem';
 
 export function useVirtual(
   length: number,
@@ -40,6 +41,7 @@ export function useVirtual(
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
+  const measureItem = useMeasureItem();
   const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
   const refreshRafRef = useRef<number>();
@@ -211,8 +213,6 @@ export function useVirtual(
       const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorIndexRef.current);
 
       for (let index = start; index <= end; index++) {
-        let prevElement: Element | null = null;
-
         const { start, size, end } = measures[index];
 
         items.push({
@@ -221,35 +221,21 @@ export function useVirtual(
           index,
           start,
           viewport,
-          measure(element) {
-            if (element) {
-              if (element !== prevElement) {
-                if (prevElement) {
-                  unobserve(prevElement);
-                }
+          measure: measureItem(index, ({ borderBoxSize: [borderBoxSize] }) => {
+            const nextSize = borderBoxSize[boxSizeKey];
 
-                observe(element, ({ borderBoxSize: [borderBoxSize] }) => {
-                  const nextSize = borderBoxSize[boxSizeKey];
+            if (nextSize !== size) {
+              abortAnimationFrame(refreshRafRef.current);
 
-                  if (nextSize !== size) {
-                    abortAnimationFrame(refreshRafRef.current);
+              measures[index] = getMeasure(index, measures, nextSize, viewport);
 
-                    measures[index] = getMeasure(index, measures, nextSize, viewport);
+              remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
 
-                    remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
-
-                    refreshRafRef.current = requestAnimationFrame(() => {
-                      update(offsetRef.current);
-                    });
-                  }
-                });
-              }
-            } else if (prevElement) {
-              unobserve(prevElement);
+              refreshRafRef.current = requestAnimationFrame(() => {
+                update(offsetRef.current);
+              });
             }
-
-            prevElement = element;
-          }
+          })
         });
       }
 
