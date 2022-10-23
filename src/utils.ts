@@ -151,26 +151,28 @@ export function binarySearch(start: number, end: number, target: number, getTarg
  * @param measures 缓存的尺寸数组
  * @param anchor 锚点尺寸数据
  */
-export function getVirtualRange(size: number, offset: number, measures: Measure[], anchor?: Measure): IndexRange {
-  let start: number;
-
+export function getVirtualRange(size: number, offset: number, measures: Measure[], anchor: number): IndexRange {
   const maxIndex = measures.length - 1;
 
-  if (anchor) {
-    const { index: anchorIndex, start: anchorStart } = anchor;
+  if (maxIndex > 0) {
+    let start: number = anchor;
 
-    if (anchorStart > offset) {
-      start = binarySearch(0, anchorIndex, offset, index => measures[index].start);
-    } else if (anchorStart < offset) {
-      start = binarySearch(anchorIndex, maxIndex, offset, index => measures[index].start);
+    if (anchor < 0 || anchor > maxIndex) {
+      start = binarySearch(0, maxIndex, offset, index => measures[index].start);
     } else {
-      start = anchorIndex;
+      const { start: anchorOffset } = measures[anchor];
+
+      if (anchorOffset > offset) {
+        start = binarySearch(0, anchor, offset, index => measures[index].start);
+      } else if (anchorOffset < offset) {
+        start = binarySearch(anchor, maxIndex, offset, index => measures[index].start);
+      }
     }
-  } else {
-    start = binarySearch(0, maxIndex, offset, index => measures[index].start);
+
+    const end = binarySearch(start, maxIndex, offset + size, index => measures[index].end);
+
+    return [start, end];
   }
 
-  const end = binarySearch(start, maxIndex, offset + size, index => measures[index].end);
-
-  return [start, end];
+  return [0, 0];
 }

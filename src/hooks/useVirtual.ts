@@ -40,10 +40,10 @@ export function useVirtual(
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
-  const anchorRef = useRef<Measure>();
   const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
   const refreshRafRef = useRef<number>();
+  const anchorIndexRef = useRef<number>(-1);
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
   const onScrollRef = useLatestRef(onScroll);
@@ -204,13 +204,11 @@ export function useVirtual(
     if (isMounted()) {
       remeasure();
 
+      const items: Item[] = [];
       const nextOffset = getOffset(offset);
       const { current: measures } = measuresRef;
       const { current: viewport } = viewportRectRef;
-
-      const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorRef.current);
-
-      const items: Item[] = [];
+      const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorIndexRef.current);
 
       for (let index = start; index <= end; index++) {
         let prevElement: Element | null = null;
@@ -254,6 +252,8 @@ export function useVirtual(
           }
         });
       }
+
+      anchorIndexRef.current = start;
 
       const maxIndex = measures.length - 1;
       const overStart = Math.max(start - overscan, 0);
