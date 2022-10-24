@@ -71,7 +71,7 @@ export function useVirtual(
     const nextMeasures = measures.slice(0, index);
 
     for (; index < length; index++) {
-      nextMeasures.push(getMeasure(index, measures, size, viewport));
+      nextMeasures.push(getMeasure(index, nextMeasures, size, viewport));
     }
 
     measuresRef.current = nextMeasures;
@@ -88,7 +88,11 @@ export function useVirtual(
   });
 
   const getOffset = useStableCallback((offset: number) => {
-    return Math.min(offset, viewport![scrollSizeKey]);
+    if (viewport) {
+      return Math.min(offset, viewport![scrollSizeKey]);
+    }
+
+    return offsetRef.current;
   });
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
@@ -212,7 +216,13 @@ export function useVirtual(
       const { current: viewport } = viewportRectRef;
       const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorIndexRef.current);
 
-      for (let index = start; index <= end; index++) {
+      anchorIndexRef.current = start;
+
+      const maxIndex = measures.length - 1;
+      const overStart = Math.max(start - overscan, 0);
+      const overEnd = Math.min(end + overscan, maxIndex);
+
+      for (let index = overStart; index <= overEnd; index++) {
         const { start, size, end } = measures[index];
 
         items.push({
@@ -231,9 +241,15 @@ export function useVirtual(
               if (nextSize !== size) {
                 abortAnimationFrame(refreshRafRef.current);
 
+                const { current: remeasureIndex } = remeasureIndexRef;
+
                 measures[index] = getMeasure(index, measures, nextSize, viewport);
 
-                remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
+                if (remeasureIndex < 0) {
+                  remeasureIndexRef.current = index;
+                } else {
+                  remeasureIndexRef.current = Math.min(index, remeasureIndex);
+                }
 
                 refreshRafRef.current = requestAnimationFrame(() => {
                   update(offsetRef.current);
@@ -244,13 +260,7 @@ export function useVirtual(
         });
       }
 
-      anchorIndexRef.current = start;
-
-      const maxIndex = measures.length - 1;
-      const overStart = Math.max(start - overscan, 0);
-      const overEnd = Math.min(end + overscan, maxIndex);
-
-      setState({ items, frame: [measures[overStart].start, measures[overEnd].end] });
+      setState({ items, frame: [measures[overStart].start, measures[maxIndex].end] });
 
       if (isFunction(onScroll)) {
         onScroll({
@@ -281,19 +291,6 @@ export function useVirtual(
       style[sizeKey] = `${frameEnd - frameStart}px`;
     }
   }, [frame, sizeKey, offsetKey, frameStart, frameEnd]);
-
-  useEffect(() => {
-    const { current: measures } = measuresRef;
-    const { length: measuresLength } = measures;
-
-    if (isSizeChanged) {
-      measure(0);
-      update(offsetRef.current);
-    } else if (measuresLength !== length) {
-      measure(Math.min(length, measuresLength));
-      update(offsetRef.current);
-    }
-  }, [length, isSizeChanged]);
 
   useEffect(() => {
     if (viewport) {
@@ -337,6 +334,19 @@ export function useVirtual(
       };
     }
   }, [viewport, sizeKey, scrollKey]);
+
+  useEffect(() => {
+    const { current: measures } = measuresRef;
+    const { length: measuresLength } = measures;
+
+    if (isSizeChanged) {
+      measure(0);
+      update(offsetRef.current);
+    } else if (measuresLength !== length) {
+      measure(Math.min(length, measuresLength));
+      update(offsetRef.current);
+    }
+  }, [length, isSizeChanged]);
 
   return [state.items, { scrollTo, scrollToItem }];
 }
