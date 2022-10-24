@@ -291,6 +291,7 @@ export function useVirtual(
     if (frame) {
       const { style } = frame;
 
+      style.margin = '0px';
       style.boxSizing = 'border-box';
     }
   }, [frame]);
