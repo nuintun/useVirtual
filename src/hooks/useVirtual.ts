@@ -222,18 +222,23 @@ export function useVirtual(
           start,
           viewport,
           measure: measureItem(index, ({ borderBoxSize: [borderBoxSize] }) => {
-            const nextSize = borderBoxSize[boxSizeKey];
+            const { current: measures } = measuresRef;
 
-            if (nextSize !== size) {
-              abortAnimationFrame(refreshRafRef.current);
+            if (index < measures.length) {
+              const { size } = measures[index];
+              const nextSize = borderBoxSize[boxSizeKey];
 
-              measures[index] = getMeasure(index, measures, nextSize, viewport);
+              if (nextSize !== size) {
+                abortAnimationFrame(refreshRafRef.current);
 
-              remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
+                measures[index] = getMeasure(index, measures, nextSize, viewport);
 
-              refreshRafRef.current = requestAnimationFrame(() => {
-                update(offsetRef.current);
-              });
+                remeasureIndexRef.current = Math.min(index, remeasureIndexRef.current);
+
+                refreshRafRef.current = requestAnimationFrame(() => {
+                  update(offsetRef.current);
+                });
+              }
             }
           })
         });
