@@ -42,7 +42,7 @@ export function useVirtual(
   const measureItem = useMeasureItem();
   const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
-  const refreshRafRef = useRef<number>();
+  const remeasureRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(-1);
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
@@ -61,7 +61,9 @@ export function useVirtual(
     const nextMeasures = measures.slice(0, index);
 
     for (; index < length; index++) {
-      nextMeasures.push(getMeasure(index, getSize(index, size, measures, viewport), nextMeasures));
+      const nextSize = getSize(index, size, measures, viewport);
+
+      nextMeasures.push(getMeasure(index, nextSize, nextMeasures));
     }
 
     measuresRef.current = nextMeasures;
@@ -87,9 +89,13 @@ export function useVirtual(
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
     if (isMounted()) {
+      remeasure();
+
       const onComplete = () => {
         if (isFunction(callback)) {
-          callback();
+          requestAnimationFrame(() => {
+            callback();
+          });
         }
       };
 
@@ -100,8 +106,6 @@ export function useVirtual(
         const { current: prevOffset } = offsetRef;
 
         if (nextOffset !== prevOffset) {
-          remeasure();
-
           const scrollTo = (offset: number): void => {
             if (viewport) {
               viewport.scrollTo({
@@ -118,7 +122,7 @@ export function useVirtual(
             const duration = getDuration(config.duration, Math.abs(distance));
 
             abortAnimationFrame(scrollRafRef.current);
-            abortAnimationFrame(refreshRafRef.current);
+            abortAnimationFrame(remeasureRafRef.current);
 
             const scroll = () => {
               if (viewport && isMounted()) {
@@ -149,14 +153,14 @@ export function useVirtual(
 
   const scrollToItem = useStableCallback<ScrollToItem>((value, callback) => {
     if (isMounted()) {
+      remeasure();
+
       const { index, smooth, align } = getScrollToItemOptions(value);
 
       if (isNumber(index) && index >= 0) {
         const { current: measures } = measuresRef;
 
         if (index < measures.length) {
-          remeasure();
-
           let { current: offset } = offsetRef;
 
           const { start, size, end } = measures[index];
@@ -182,8 +186,6 @@ export function useVirtual(
           }
 
           scrollTo({ offset, smooth }, () => {
-            remeasure();
-
             const { current: measures } = measuresRef;
 
             if (index < measures.length) {
@@ -234,7 +236,7 @@ export function useVirtual(
               const nextSize = borderBoxSize[boxSizeKey];
 
               if (nextSize !== size) {
-                abortAnimationFrame(refreshRafRef.current);
+                abortAnimationFrame(remeasureRafRef.current);
 
                 const { current: remeasureIndex } = remeasureIndexRef;
 
@@ -246,7 +248,7 @@ export function useVirtual(
                   remeasureIndexRef.current = Math.min(index, remeasureIndex);
                 }
 
-                refreshRafRef.current = requestAnimationFrame(() => {
+                remeasureRafRef.current = requestAnimationFrame(() => {
                   update(offsetRef.current);
                 });
               }
@@ -308,7 +310,7 @@ export function useVirtual(
         if (viewport && isMounted()) {
           const offset = viewport[scrollKey];
 
-          abortAnimationFrame(refreshRafRef.current);
+          abortAnimationFrame(remeasureRafRef.current);
 
           update(offset, onScrollRef.current);
 
