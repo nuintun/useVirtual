@@ -331,9 +331,8 @@ export function useVirtual(
           width: borderBoxSize.inlineSize,
           height: borderBoxSize.blockSize
         };
-        const { current: prevViewport } = viewportRectRef;
 
-        if (viewport[sizeKey] !== prevViewport[sizeKey]) {
+        if (viewport[sizeKey] !== viewportRectRef.current[sizeKey]) {
           viewportRectRef.current = viewport;
 
           update(offsetRef.current);
