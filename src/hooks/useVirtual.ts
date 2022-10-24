@@ -276,7 +276,7 @@ export function useVirtual(
     }
   });
 
-  const [frameStart, frameEnd] = state.frame;
+  const [frameOffset, frameSize] = state.frame;
 
   useEffect(() => {
     if (frame) {
@@ -290,17 +290,17 @@ export function useVirtual(
     if (frame) {
       const { style } = frame;
 
-      style[sizeKey] = `${frameEnd}px`;
+      style[sizeKey] = `${frameSize}px`;
     }
-  }, [frame, sizeKey, frameEnd]);
+  }, [frame, sizeKey, frameSize]);
 
   useEffect(() => {
     if (frame) {
       const { style } = frame;
 
-      style[offsetKey] = `${frameStart}px`;
+      style[offsetKey] = `${frameOffset}px`;
     }
-  }, [frame, offsetKey, frameStart]);
+  }, [frame, offsetKey, frameOffset]);
 
   useEffect(() => {
     if (viewport) {
