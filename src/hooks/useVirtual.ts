@@ -176,21 +176,24 @@ export function useVirtual(
           let { current: offset } = offsetRef;
 
           const { start, size, end } = measures[index];
-          const viewportSize = viewportRectRef.current[sizeKey];
-          const { end: scrollSize } = measures[measures.length - 1];
+          const viewport = viewportRectRef.current[sizeKey];
 
           switch (align) {
             case Align.start:
-              offset = scrollSize - start <= viewportSize ? scrollSize - viewportSize : start;
+              offset = start;
               break;
             case Align.center:
-              const to = start - viewportSize / 2 + size / 2;
-
-              offset = scrollSize - to <= viewportSize ? scrollSize - viewportSize : to;
+              offset = start + size / 2 - viewport / 2;
               break;
             case Align.end:
+              offset = end - viewport;
               break;
             default:
+              if (end <= offset) {
+                offset = start;
+              } else if (start >= offset + viewport) {
+                offset = end - viewport;
+              }
               break;
           }
 
@@ -334,8 +337,8 @@ export function useVirtual(
 
       observe(viewport, ({ borderBoxSize: [borderBoxSize] }) => {
         const viewport: Viewport = {
-          width: borderBoxSize.blockSize,
-          height: borderBoxSize.inlineSize
+          width: borderBoxSize.inlineSize,
+          height: borderBoxSize.blockSize
         };
         const { current: prevViewport } = viewportRectRef;
 
