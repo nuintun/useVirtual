@@ -2,7 +2,7 @@
  * @module utils
  */
 
-import { Duration, IndexRange, Measure, Scrolling, ScrollToItemOptions, ScrollToOptions, Size, Viewport } from './types';
+import { Duration, Measure, Scrolling, ScrollToItemOptions, ScrollToOptions, Size, Viewport, VirtualRange } from './types';
 
 /**
  * @function easingImpl
@@ -160,7 +160,7 @@ export function binarySearch(start: number, end: number, target: number, getTarg
  * @param measures 缓存的尺寸数组
  * @param anchor 锚点尺寸数据
  */
-export function getVirtualRange(size: number, offset: number, measures: Measure[], anchor: number): IndexRange {
+export function getVirtualRange(size: number, offset: number, measures: Measure[], anchor: number): VirtualRange {
   const maxIndex = measures.length - 1;
 
   if (maxIndex > 0) {

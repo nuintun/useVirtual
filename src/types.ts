@@ -4,7 +4,7 @@
 
 export type Easing = (time: number) => number;
 
-export type IndexRange = [start: number, end: number];
+export type VirtualRange = [start: number, end: number];
 
 export type Duration = number | ((distance: number) => number);
 
@@ -38,8 +38,8 @@ export interface State {
 
 export interface LoadEvent {
   readonly offset: number;
-  readonly visible: IndexRange;
-  readonly overscan: IndexRange;
+  readonly visible: VirtualRange;
+  readonly overscan: VirtualRange;
 }
 
 export interface onLoad {
@@ -49,8 +49,8 @@ export interface onLoad {
 export interface ScrollEvent {
   readonly offset: number;
   readonly forward: boolean;
-  readonly visible: IndexRange;
-  readonly overscan: IndexRange;
+  readonly visible: VirtualRange;
+  readonly overscan: VirtualRange;
 }
 
 export interface OnScroll {
