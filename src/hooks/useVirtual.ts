@@ -3,7 +3,7 @@
  */
 
 import {
-  Align,
+  IndexRange,
   Item,
   MappingKeys,
   Measure,
@@ -35,6 +35,13 @@ import { useResizeObserver } from './useResizeObserver';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useMeasureItem } from './useMeasureItem';
 
+const enum Align {
+  end = 'end',
+  auto = 'auto',
+  start = 'start',
+  center = 'center'
+}
+
 export function useVirtual(
   length: number,
   { size, frame, onLoad, onResize, onScroll, viewport, scrolling, horizontal, overscan = 10 }: Options
@@ -50,16 +57,17 @@ export function useVirtual(
   const onResizeRef = useLatestRef(onResize);
   const onScrollRef = useLatestRef(onScroll);
   const [observe, unobserve] = useResizeObserver();
+  const prevRangeRef = useRef<IndexRange>([-1, -1]);
   const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
   const [state, setState] = useState<State>({ items: [], frame: [0, 0] });
   const isSizeChanged = size.toString() !== usePrevious(size)?.toString();
 
   const [sizeKey, offsetKey, scrollKey, boxSizeKey, scrollToKey, scrollSizeKey] = useMemo<MappingKeys>(() => {
     if (horizontal) {
-      return ['width', 'marginLeft', 'scrollLeft', 'inlineSize', 'left', 'scrollWidth'];
+      return ['width', 'paddingLeft', 'scrollLeft', 'inlineSize', 'left', 'scrollWidth'];
     }
 
-    return ['height', 'marginTop', 'scrollTop', 'blockSize', 'top', 'scrollHeight'];
+    return ['height', 'paddingTop', 'scrollTop', 'blockSize', 'top', 'scrollHeight'];
   }, [horizontal]);
 
   const measure = useStableCallback((start: number) => {
@@ -219,48 +227,52 @@ export function useVirtual(
       anchorIndexRef.current = start;
 
       const maxIndex = measures.length - 1;
+      const { current: prevRange } = prevRangeRef;
       const overStart = Math.max(start - overscan, 0);
       const overEnd = Math.min(end + overscan, maxIndex);
+      const isShouldUpdate = overStart !== prevRange[0] && overEnd !== prevRange[1];
 
-      for (let index = overStart; index <= overEnd; index++) {
-        const { start, size, end } = measures[index];
+      if (isShouldUpdate) {
+        for (let index = overStart; index <= overEnd; index++) {
+          const { start, size, end } = measures[index];
 
-        items.push({
-          end,
-          size,
-          index,
-          start,
-          viewport,
-          measure: measureItem(index, ({ borderBoxSize: [borderBoxSize] }) => {
-            const { current: measures } = measuresRef;
+          items.push({
+            end,
+            size,
+            index,
+            start,
+            viewport,
+            measure: measureItem(index, ({ borderBoxSize: [borderBoxSize] }) => {
+              const { current: measures } = measuresRef;
 
-            if (index < measures.length) {
-              const { size } = measures[index];
-              const nextSize = borderBoxSize[boxSizeKey];
+              if (index < measures.length) {
+                const { size } = measures[index];
+                const nextSize = borderBoxSize[boxSizeKey];
 
-              if (nextSize !== size) {
-                abortAnimationFrame(refreshRafRef.current);
+                if (nextSize !== size) {
+                  abortAnimationFrame(refreshRafRef.current);
 
-                const { current: remeasureIndex } = remeasureIndexRef;
+                  const { current: remeasureIndex } = remeasureIndexRef;
 
-                measures[index] = getMeasure(index, measures, nextSize, viewport);
+                  measures[index] = getMeasure(index, measures, nextSize, viewport);
 
-                if (remeasureIndex < 0) {
-                  remeasureIndexRef.current = index;
-                } else {
-                  remeasureIndexRef.current = Math.min(index, remeasureIndex);
+                  if (remeasureIndex < 0) {
+                    remeasureIndexRef.current = index;
+                  } else {
+                    remeasureIndexRef.current = Math.min(index, remeasureIndex);
+                  }
+
+                  refreshRafRef.current = requestAnimationFrame(() => {
+                    update(offsetRef.current);
+                  });
                 }
-
-                refreshRafRef.current = requestAnimationFrame(() => {
-                  update(offsetRef.current);
-                });
               }
-            }
-          })
-        });
-      }
+            })
+          });
+        }
 
-      setState({ items, frame: [measures[overStart].start, measures[maxIndex].end] });
+        setState({ items, frame: [measures[overStart].start, measures[maxIndex].end] });
+      }
 
       if (isFunction(onScroll)) {
         onScroll({
@@ -271,7 +283,7 @@ export function useVirtual(
         });
       }
 
-      if (overEnd >= maxIndex && isFunction(onLoad)) {
+      if (isShouldUpdate && overEnd >= maxIndex && isFunction(onLoad)) {
         onLoad({
           offset: nextOffset,
           visible: [start, end],
@@ -287,10 +299,25 @@ export function useVirtual(
     if (frame) {
       const { style } = frame;
 
-      style[offsetKey] = `${frameStart}px`;
-      style[sizeKey] = `${frameEnd - frameStart}px`;
+      style.boxSizing = 'border-box';
     }
-  }, [frame, sizeKey, offsetKey, frameStart, frameEnd]);
+  }, [frame]);
+
+  useLayoutEffect(() => {
+    if (frame) {
+      const { style } = frame;
+
+      style[sizeKey] = `${frameEnd}px`;
+    }
+  }, [frame, sizeKey, frameEnd]);
+
+  useLayoutEffect(() => {
+    if (frame) {
+      const { style } = frame;
+
+      style[offsetKey] = `${frameStart}px`;
+    }
+  }, [frame, offsetKey, frameStart]);
 
   useEffect(() => {
     if (viewport) {

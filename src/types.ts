@@ -10,9 +10,9 @@ export type Easing = (time: number) => number;
 
 export type ScrollKey = 'scrollLeft' | 'scrollTop';
 
-export type OffsetKey = 'marginLeft' | 'marginTop';
-
 export type BoxSizeKey = 'inlineSize' | 'blockSize';
+
+export type OffsetKey = 'paddingLeft' | 'paddingTop';
 
 export type IndexRange = [start: number, end: number];
 
@@ -114,17 +114,10 @@ export interface ScrollTo {
   (options: ScrollToOptions, callback?: () => void): void;
 }
 
-export enum Align {
-  end = 'end',
-  auto = 'auto',
-  start = 'start',
-  center = 'center'
-}
-
 export interface ScrollToItemOptions {
   index: number;
-  align?: Align;
   smooth?: boolean;
+  align?: 'auto' | 'start' | 'center' | 'end';
 }
 
 export interface ScrollToItem {
