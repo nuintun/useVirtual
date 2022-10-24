@@ -51,6 +51,14 @@ export function abortAnimationFrame(handle: number | null | undefined): void {
 }
 
 /**
+ * @function getScrollSize
+ * @param measures
+ */
+export function getScrollSize(measures: Measure[]): number {
+  return measures[measures.length - 1]?.end ?? 0;
+}
+
+/**
  * @function getScrolling
  * @param scrolling
  */
@@ -96,6 +104,18 @@ export function getScrollToItemOptions(value: number | ScrollToItemOptions): Scr
 }
 
 /**
+ * @function getMeasure
+ * @param index 索引
+ * @param size 列表项目尺寸
+ * @param measures 已缓存测量数组
+ */
+export function getMeasure(index: number, size: number, measures: Measure[]): Measure {
+  const start = measures[index - 1]?.end ?? 0;
+
+  return { index, start, size, end: start + size };
+}
+
+/**
  * @function getSize
  * @param index 索引
  * @param size 列表项目尺寸
@@ -106,18 +126,6 @@ export function getSize(index: number, size: Size, measures: Measure[], viewport
   const measure = measures[index];
 
   return measure ? measure.size : isFunction(size) ? size(index, viewport) : size;
-}
-
-/**
- * @function getMeasure
- * @param index 索引
- * @param size 列表项目尺寸
- * @param measures 已缓存测量数组
- */
-export function getMeasure(index: number, size: number, measures: Measure[]): Measure {
-  const start = measures[index - 1]?.end ?? 0;
-
-  return { index, start, size, end: start + size };
 }
 
 /**

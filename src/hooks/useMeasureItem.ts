@@ -1,3 +1,7 @@
+/**
+ * @module useMeasureItem
+ */
+
 import { useCallback, useEffect, useMemo } from 'react';
 import { ResizeObserverCallback, useResizeObserver } from './useResizeObserver';
 

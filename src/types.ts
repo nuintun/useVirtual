@@ -2,34 +2,13 @@
  * @module types
  */
 
-export type SizeKey = 'width' | 'height';
-
-export type ScrollToKey = 'left' | 'top';
-
 export type Easing = (time: number) => number;
 
-export type ScrollKey = 'scrollLeft' | 'scrollTop';
-
-export type BoxSizeKey = 'inlineSize' | 'blockSize';
-
-export type OffsetKey = 'paddingLeft' | 'paddingTop';
-
 export type IndexRange = [start: number, end: number];
-
-export type ScrollSizeKey = 'scrollWidth' | 'scrollHeight';
 
 export type Duration = number | ((distance: number) => number);
 
 export type Size = number | ((index: number, viewport: Viewport) => number);
-
-export type MappingKeys = [
-  sizeKey: SizeKey,
-  offsetKey: OffsetKey,
-  scrollKey: ScrollKey,
-  boxSizeKey: BoxSizeKey,
-  scrollToKey: ScrollToKey,
-  scrollSizeKey: ScrollSizeKey
-];
 
 export interface Measure {
   end: number;
