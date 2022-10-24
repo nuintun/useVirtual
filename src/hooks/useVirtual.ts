@@ -358,17 +358,18 @@ export function useVirtual(
   const isSizeChanged = size.toString() !== usePrevious(size)?.toString();
 
   useEffect(() => {
-    const { current: measures } = measuresRef;
-    const { length: measuresLength } = measures;
-
     if (isSizeChanged) {
       measure(0);
 
       update(offsetRef.current);
-    } else if (measuresLength !== length) {
-      measure(Math.min(length, measuresLength));
+    } else {
+      const { length: prevLength } = measuresRef.current;
 
-      update(offsetRef.current);
+      if (prevLength !== length) {
+        measure(Math.min(length, prevLength));
+
+        update(offsetRef.current);
+      }
     }
   }, [length, isSizeChanged]);
 
