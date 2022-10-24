@@ -316,13 +316,13 @@ export function useVirtual(
     if (viewport) {
       const onScrollChange = () => {
         if (viewport && isMounted()) {
-          const offset = viewport[scrollKey];
-
           abortAnimationFrame(remeasureRafRef.current);
 
-          update(offset, onScrollRef.current);
+          const offset = viewport[scrollKey];
 
           offsetRef.current = offset;
+
+          update(offset, onScrollRef.current);
         }
       };
 
