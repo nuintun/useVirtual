@@ -49,8 +49,8 @@ export function useVirtual(
   const onScrollRef = useLatestRef(onScroll);
   const [observe, unobserve] = useResizeObserver();
   const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
-  const [state, setState] = useState<State>({ items: [], frame: [0, 0] });
   const [sizeKey, offsetKey, scrollKey, boxSizeKey, scrollToKey] = useMappingKeys(horizontal);
+  const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
 
   const measure = useStableCallback((start: number) => {
     const { current: measures } = measuresRef;
@@ -94,7 +94,9 @@ export function useVirtual(
       const onComplete = () => {
         if (isFunction(callback)) {
           requestAnimationFrame(() => {
-            callback();
+            requestAnimationFrame(() => {
+              callback();
+            });
           });
         }
       };
@@ -189,9 +191,10 @@ export function useVirtual(
             const { current: measures } = measuresRef;
 
             if (index < measures.length) {
+              const { visible } = state;
               const measure = measures[index];
 
-              if (measure.start !== start || measure.end !== end) {
+              if (index < visible[0] || index > visible[1] || measure.start !== start || measure.end !== end) {
                 scrollToItem({ index, smooth, align }, callback);
               } else if (isFunction(callback)) {
                 callback();
@@ -257,7 +260,11 @@ export function useVirtual(
         });
       }
 
-      setState({ items, frame: [measures[overStart].start, measures[maxIndex].end] });
+      setState({
+        items,
+        visible: [start, end],
+        frame: [measures[overStart].start, measures[maxIndex].end]
+      });
 
       if (isFunction(onScroll)) {
         onScroll({

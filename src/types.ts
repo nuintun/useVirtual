@@ -32,8 +32,9 @@ export interface Item {
 }
 
 export interface State {
-  items: Item[];
-  frame: [start: number, end: number];
+  readonly items: Item[];
+  readonly visible: VirtualRange;
+  readonly frame: [start: number, end: number];
 }
 
 export interface LoadEvent {
