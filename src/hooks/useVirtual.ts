@@ -22,6 +22,7 @@ import {
   getScrolling,
   getScrollToItemOptions,
   getScrollToOptions,
+  getSize,
   getVirtualRange,
   isFunction,
   isNumber,
@@ -30,10 +31,10 @@ import {
 import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
+import { useMeasureItem } from './useMeasureItem';
 import { useStableCallback } from './useStableCallback';
 import { useResizeObserver } from './useResizeObserver';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { useMeasureItem } from './useMeasureItem';
 
 const enum Align {
   end = 'end',
@@ -79,7 +80,7 @@ export function useVirtual(
     const nextMeasures = measures.slice(0, index);
 
     for (; index < length; index++) {
-      nextMeasures.push(getMeasure(index, nextMeasures, size, viewport));
+      nextMeasures.push(getMeasure(index, getSize(index, size, measures, viewport), nextMeasures));
     }
 
     measuresRef.current = nextMeasures;
@@ -233,9 +234,11 @@ export function useVirtual(
       const { current: prevRange } = prevRangeRef;
       const overStart = Math.max(start - overscan, 0);
       const overEnd = Math.min(end + overscan, maxIndex);
-      const isShouldUpdate = overStart !== prevRange[0] && overEnd !== prevRange[1];
+      const isShouldUpdate = overStart !== prevRange[0] || overEnd !== prevRange[1];
 
       if (isShouldUpdate) {
+        prevRangeRef.current = [overStart, overEnd];
+
         for (let index = overStart; index <= overEnd; index++) {
           const { start, size, end } = measures[index];
 
@@ -257,7 +260,7 @@ export function useVirtual(
 
                   const { current: remeasureIndex } = remeasureIndexRef;
 
-                  measures[index] = getMeasure(index, measures, nextSize, viewport);
+                  measures[index] = getMeasure(index, nextSize, measures);
 
                   if (remeasureIndex < 0) {
                     remeasureIndexRef.current = index;

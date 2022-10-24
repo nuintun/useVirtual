@@ -99,24 +99,25 @@ export function getScrollToItemOptions(value: number | ScrollToItemOptions): Scr
  * @function getSize
  * @param index 索引
  * @param size 列表项目尺寸
+ * @param measures 已缓存测量数组
  * @param viewport 视窗尺寸
  */
-export function getSize(index: number, size: Size, viewport: Viewport): number {
-  return isFunction(size) ? size(index, viewport) : size;
+export function getSize(index: number, size: Size, measures: Measure[], viewport: Viewport): number {
+  const measure = measures[index];
+
+  return measure ? measure.size : isFunction(size) ? size(index, viewport) : size;
 }
 
 /**
  * @function getMeasure
  * @param index 索引
- * @param measures 已缓存测量数组
  * @param size 列表项目尺寸
- * @param viewport 视窗尺寸
+ * @param measures 已缓存测量数组
  */
-export function getMeasure(index: number, measures: Measure[], size: Size, viewport: Viewport): Measure {
+export function getMeasure(index: number, size: number, measures: Measure[]): Measure {
   const start = measures[index - 1]?.end ?? 0;
-  const rect = measures[index]?.size ?? getSize(index, size, viewport);
 
-  return { index, start, size: rect, end: start + rect };
+  return { index, start, size, end: start + size };
 }
 
 /**
