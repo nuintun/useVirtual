@@ -363,9 +363,11 @@ export function useVirtual(
 
     if (isSizeChanged) {
       measure(0);
+
       update(offsetRef.current);
     } else if (measuresLength !== length) {
       measure(Math.min(length, measuresLength));
+
       update(offsetRef.current);
     }
   }, [length, isSizeChanged]);
