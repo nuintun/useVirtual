@@ -137,20 +137,20 @@ export function getSize(index: number, size: Size, measures: Measure[], viewport
  * @param getTarget 根据索引获取对比目标
  */
 export function binarySearch(start: number, end: number, target: number, getTarget: (index: number) => number): number {
-  while (start <= end) {
+  while (start < end) {
     const middle = ((start + end) / 2) | 0;
     const compareTarget = getTarget(middle);
 
-    if (target < compareTarget) {
+    if (compareTarget > target) {
       end = middle - 1;
-    } else if (target > compareTarget) {
+    } else if (compareTarget < target) {
       start = middle + 1;
     } else {
       return middle;
     }
   }
 
-  return Math.max(0, start - 1);
+  return start;
 }
 
 /**

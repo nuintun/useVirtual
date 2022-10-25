@@ -27,6 +27,7 @@ export interface Item {
   readonly size: number;
   readonly index: number;
   readonly start: number;
+  readonly visible: boolean;
   readonly viewport: Viewport;
   readonly measure: (element: HTMLElement | null) => void;
 }

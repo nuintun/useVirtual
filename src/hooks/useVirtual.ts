@@ -42,8 +42,8 @@ export function useVirtual(
   const measureItem = useMeasureItem();
   const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
+  const anchorIndexRef = useRef<number>(0);
   const remeasureRafRef = useRef<number>();
-  const anchorIndexRef = useRef<number>(-1);
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
   const onScrollRef = useLatestRef(onScroll);
@@ -207,7 +207,7 @@ export function useVirtual(
   });
 
   const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
-    if (isMounted()) {
+    if (length > 0 && isMounted()) {
       remeasure();
 
       const items: Item[] = [];
@@ -223,14 +223,15 @@ export function useVirtual(
       const overEnd = Math.min(end + overscan, maxIndex);
 
       for (let index = overStart; index <= overEnd; index++) {
-        const { start, size, end } = measures[index];
+        const measure = measures[index];
 
         items.push({
-          end,
-          size,
           index,
-          start,
           viewport,
+          end: measure.end,
+          size: measure.size,
+          start: measure.start,
+          visible: index >= start && index <= end,
           measure: measureItem(index, ({ borderBoxSize: [borderBoxSize] }) => {
             const { current: measures } = measuresRef;
 
@@ -360,17 +361,16 @@ export function useVirtual(
   useEffect(() => {
     if (isSizeChanged) {
       measure(0);
-
-      update(offsetRef.current);
     } else {
-      const { length: prevLength } = measuresRef.current;
-
-      if (prevLength !== length) {
-        measure(Math.min(length, prevLength));
-
-        update(offsetRef.current);
-      }
+      measure(Math.min(length, measuresRef.current.length));
     }
+
+    const maxIndex = Math.max(0, length - 1);
+    const { current: anchor } = anchorIndexRef;
+
+    anchorIndexRef.current = Math.min(maxIndex, anchor);
+
+    update(offsetRef.current);
   }, [length, isSizeChanged]);
 
   return [state.items, { scrollTo, scrollToItem }];
