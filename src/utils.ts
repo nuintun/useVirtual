@@ -130,21 +130,21 @@ export function getSize(index: number, size: Size, measures: Measure[], viewport
 
 /**
  * @function binarySearch
- * @description 二分法查找算法
+ * @description 二分法查找第一个可见元素索引
+ * @param measures 已缓存测量数组
+ * @param offset 视窗滚动偏移
  * @param start 开始索引
  * @param end 结束索引
- * @param target 检测目标
- * @param getTarget 根据索引获取对比目标
  */
-export function binarySearch(start: number, end: number, target: number, getTarget: (index: number) => number): number {
+export function binarySearch(measures: Measure[], offset: number, start: number, end: number): number {
   while (start < end) {
     const middle = ((start + end) / 2) | 0;
-    const compareTarget = getTarget(middle);
+    const measure = measures[middle];
 
-    if (compareTarget > target) {
-      end = middle - 1;
-    } else if (compareTarget < target) {
+    if (measure.end <= offset) {
       start = middle + 1;
+    } else if (measure.start > offset) {
+      end = middle - 1;
     } else {
       return middle;
     }
@@ -157,28 +157,34 @@ export function binarySearch(start: number, end: number, target: number, getTarg
  * @function getVirtualRange
  * @param size 视窗尺寸
  * @param offset 视窗滚动偏移
- * @param measures 缓存的尺寸数组
- * @param anchor 锚点尺寸数据
+ * @param measures 已缓存测量数组
+ * @param anchor 锚点索引
  */
-export function getVirtualRange(size: number, offset: number, measures: Measure[], anchor: number): VirtualRange {
-  const maxIndex = measures.length - 1;
+export function getVirtualRange(viewport: number, offset: number, measures: Measure[], anchor: number): VirtualRange {
+  if (viewport > 0) {
+    const offsetEnd = offset + viewport;
+    const maxIndex = measures.length - 1;
+    const { start: anchorOffset } = measures[anchor];
 
-  if (maxIndex > 0) {
     let start: number = anchor;
 
-    if (anchor < 0 || anchor > maxIndex) {
-      start = binarySearch(0, maxIndex, offset, index => measures[index].start);
-    } else {
-      const { start: anchorOffset } = measures[anchor];
-
-      if (anchorOffset > offset) {
-        start = binarySearch(0, anchor, offset, index => measures[index].start);
-      } else if (anchorOffset < offset) {
-        start = binarySearch(anchor, maxIndex, offset, index => measures[index].start);
-      }
+    if (anchorOffset > offset) {
+      start = binarySearch(measures, offset, 0, anchor);
+    } else if (anchorOffset < offset) {
+      start = binarySearch(measures, offset, anchor, maxIndex);
     }
 
-    const end = binarySearch(start, maxIndex, offset + size, index => measures[index].end);
+    let end = start;
+
+    while (end < maxIndex) {
+      const measure = measures[end];
+
+      if (measure.start < offsetEnd && measure.end >= offsetEnd) {
+        return [start, end];
+      } else {
+        end++;
+      }
+    }
 
     return [start, end];
   }
