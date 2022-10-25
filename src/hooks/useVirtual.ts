@@ -16,11 +16,11 @@ import {
   isNumber,
   now
 } from '../utils';
+import { useKeys } from './useKeys';
 import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
 import { useMeasureItem } from './useMeasureItem';
-import { useMappingKeys } from './useMappingKeys';
 import { useEffect, useRef, useState } from 'react';
 import { useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
@@ -49,7 +49,7 @@ export function useVirtual(
   const onScrollRef = useLatestRef(onScroll);
   const [observe, unobserve] = useResizeObserver();
   const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
-  const [sizeKey, offsetKey, scrollKey, boxSizeKey, scrollToKey] = useMappingKeys(horizontal);
+  const [sizeKey, offsetKey, boxSizeKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
   const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
 
   const measure = useStableCallback((start: number) => {
@@ -318,7 +318,7 @@ export function useVirtual(
         if (viewport && isMounted()) {
           abortAnimationFrame(remeasureRafRef.current);
 
-          const offset = viewport[scrollKey];
+          const offset = viewport[scrollOffsetKey];
 
           offsetRef.current = offset;
 
@@ -353,7 +353,7 @@ export function useVirtual(
         viewport.removeEventListener('scroll', onScrollChange);
       };
     }
-  }, [viewport, sizeKey, scrollKey]);
+  }, [viewport, sizeKey, scrollOffsetKey]);
 
   const isSizeChanged = size.toString() !== usePrevious(size)?.toString();
 

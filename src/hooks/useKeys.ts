@@ -1,38 +1,38 @@
 /**
- * @module useMappingKeys
+ * @module useKeys
  */
 
 import { useMemo } from 'react';
 
-export type MappingKeys = [
+export type Keys = [
   sizeKey: SizeKey,
   offsetKey: OffsetKey,
-  scrollKey: ScrollKey,
   boxSizeKey: BoxSizeKey,
-  scrollToKey: ScrollToKey
+  scrollToKey: ScrollToKey,
+  scrollOffsetKey: ScrollOffsetKey
 ];
 
 export type SizeKey = 'width' | 'height';
 
 export type ScrollToKey = 'left' | 'top';
 
-export type ScrollKey = 'scrollLeft' | 'scrollTop';
-
 export type BoxSizeKey = 'inlineSize' | 'blockSize';
 
 export type OffsetKey = 'paddingLeft' | 'paddingTop';
 
+export type ScrollOffsetKey = 'scrollLeft' | 'scrollTop';
+
 /**
- * @function useStableCallback
+ * @function useKeys
  * @description [hook] 获取属性名称
  * @param horizontal 是否为水平模式
  */
-export function useMappingKeys(horizontal?: boolean): MappingKeys {
-  return useMemo<MappingKeys>(() => {
+export function useKeys(horizontal?: boolean): Keys {
+  return useMemo<Keys>(() => {
     if (horizontal) {
-      return ['width', 'paddingLeft', 'scrollLeft', 'inlineSize', 'left'];
+      return ['width', 'paddingLeft', 'inlineSize', 'left', 'scrollLeft'];
     }
 
-    return ['height', 'paddingTop', 'scrollTop', 'blockSize', 'top'];
+    return ['height', 'paddingTop', 'blockSize', 'top', 'scrollTop'];
   }, [horizontal]);
 }
