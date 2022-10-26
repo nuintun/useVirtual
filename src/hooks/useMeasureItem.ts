@@ -35,6 +35,8 @@ export function useMeasureItem(): MeasureItem {
             unobserve(prevElement);
           }
 
+          element.style.margin = '0px';
+
           observe(element, callback);
 
           elements.set(index, element);
