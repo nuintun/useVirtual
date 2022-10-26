@@ -2,7 +2,18 @@
  * @module utils
  */
 
-import { Duration, Measure, Rect, Scrolling, ScrollToItemOptions, ScrollToOptions, Size, VirtualRange } from './types';
+import {
+  Duration,
+  Item,
+  Measure,
+  Rect,
+  Scrolling,
+  ScrollToItemOptions,
+  ScrollToOptions,
+  Size,
+  State,
+  VirtualRange
+} from './types';
 
 /**
  * @function easingImpl
@@ -39,6 +50,70 @@ export function isFunction(value: unknown): value is Function {
  */
 export function isNumber(value: unknown): value is number {
   return Object.prototype.toString.call(value) === '[object Number]';
+}
+
+/**
+ * @function isEqual
+ * @param next
+ * @param prev
+ * @param keys
+ */
+export function isEqual<T>(next: T, prev: T, keys: (keyof T)[]): boolean {
+  for (const key of keys) {
+    if (next[key] !== prev[key]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * @function isEqualItem
+ * @param next
+ * @param prev
+ */
+export function isEqualItem(next: Item, prev: Item): boolean {
+  if (!isEqual(prev, next, ['index', 'start', 'size', 'end', 'visible'])) {
+    return false;
+  }
+
+  if (!isEqual(prev.viewport, next.viewport, ['width', 'height'])) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * @function isEqualState
+ * @param next
+ * @param prev
+ */
+export function isEqualState(next: State, prev: State): boolean {
+  if (!isEqual(prev.frame, next.frame, [0, 1])) {
+    return false;
+  }
+
+  if (!isEqual(prev.visible, next.visible, [0, 1])) {
+    return false;
+  }
+
+  const { items: prevItems } = prev;
+  const { items: nextItems } = next;
+  const { length } = nextItems;
+
+  if (length !== prevItems.length) {
+    return false;
+  }
+
+  for (let index = 0; index >= 0; index--) {
+    if (!isEqualItem(prevItems[index], nextItems[index])) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 /**

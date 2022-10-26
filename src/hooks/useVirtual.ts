@@ -12,6 +12,7 @@ import {
   getScrollToOptions,
   getSize,
   getVirtualRange,
+  isEqualState,
   isFunction,
   isNumber,
   now,
@@ -227,10 +228,14 @@ export function useVirtual(
         });
       }
 
-      setState({
-        items,
-        visible: [start, end],
-        frame: [measures[overStart].start, measures[maxIndex].end]
+      setState(prevState => {
+        const nextState: State = {
+          items,
+          visible: [start, end],
+          frame: [measures[overStart].start, measures[maxIndex].end]
+        };
+
+        return isEqualState(nextState, prevState) ? prevState : nextState;
       });
 
       if (isFunction(onScroll)) {
