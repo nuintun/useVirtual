@@ -6,7 +6,6 @@ import {
   abortAnimationFrame,
   getBoundingRect,
   getDuration,
-  getMeasure,
   getScrolling,
   getScrollSize,
   getScrollToItemOptions,
@@ -17,6 +16,7 @@ import {
   isNumber,
   now,
   removeStyles,
+  setMeasure,
   setStyles
 } from '../utils';
 import { useKeys } from './useKeys';
@@ -58,13 +58,11 @@ export function useVirtual(
     const { current: viewport } = viewportRectRef;
 
     for (let index = start; index < length; index++) {
-      const nextSize = getSize(index, size, measures, viewport);
-
-      measures[index] = getMeasure(index, nextSize, measures);
+      setMeasure(measures, index, getSize(index, size, measures, viewport));
     }
   });
 
-  const getOffset = useStableCallback((offset: number) => {
+  const getScrollOffset = useStableCallback((offset: number) => {
     if (viewport) {
       return Math.min(offset, getScrollSize(measuresRef.current));
     }
@@ -87,8 +85,8 @@ export function useVirtual(
       const { offset, smooth } = getScrollToOptions(value);
 
       if (isNumber(offset) && offset >= 0) {
-        const nextOffset = getOffset(offset);
         const { current: prevOffset } = offsetRef;
+        const nextOffset = getScrollOffset(offset);
 
         if (nextOffset !== prevOffset) {
           const scrollTo = (offset: number): void => {
@@ -189,8 +187,8 @@ export function useVirtual(
   const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
     if (length > 0 && isMounted()) {
       const items: Item[] = [];
-      const nextOffset = getOffset(offset);
       const { current: measures } = measuresRef;
+      const nextOffset = getScrollOffset(offset);
       const { current: viewport } = viewportRectRef;
       const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorIndexRef.current);
 
@@ -218,7 +216,7 @@ export function useVirtual(
               const nextSize = getBoundingRect(entry)[sizeKey];
 
               if (nextSize !== size) {
-                measures[index] = getMeasure(index, nextSize, measures);
+                setMeasure(measures, index, nextSize);
 
                 remeasure(index);
 
@@ -326,12 +324,12 @@ export function useVirtual(
       remeasure(0);
     } else {
       const { current: measures } = measuresRef;
-      const { length: measuresLength } = measures;
+      const { length: prevLength } = measures;
 
-      if (measuresLength > length) {
+      if (prevLength > length) {
         measures.length = length;
-      } else if (measuresLength < length) {
-        remeasure(measuresLength);
+      } else if (prevLength < length) {
+        remeasure(prevLength);
       }
     }
 

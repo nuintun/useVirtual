@@ -6,11 +6,12 @@ import { Duration, Measure, Rect, Scrolling, ScrollToItemOptions, ScrollToOption
 
 /**
  * @function easingImpl
+ * @description easeOutCubic
  * @description 缓动动画
  * @param time 当前动画时间，0-1 之间
  */
 export function easingImpl(time: number): number {
-  return 1 - Math.pow(1 - time, 4);
+  return (time - 1) ** 3 + 1;
 }
 
 /**
@@ -137,15 +138,15 @@ export function getScrollToItemOptions(value: number | ScrollToItemOptions): Scr
 }
 
 /**
- * @function getMeasure
+ * @function setMeasure
+ * @param measures 已缓存测量数组
  * @param index 索引
  * @param size 列表项目尺寸
- * @param measures 已缓存测量数组
  */
-export function getMeasure(index: number, size: number, measures: Measure[]): Measure {
+export function setMeasure(measures: Measure[], index: number, size: number): void {
   const start = measures[index - 1]?.end ?? 0;
 
-  return { index, start, size, end: start + size };
+  measures[index] = { index, start, size, end: start + size };
 }
 
 /**
