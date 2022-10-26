@@ -2,7 +2,6 @@
  * @module useResizeObserver
  */
 
-import { Rect } from '../types';
 import { useCallback, useEffect, useMemo } from 'react';
 
 export interface Unobserve {
@@ -60,22 +59,4 @@ export function useResizeObserver(): [observe: Observe, unobserve: Unobserve] {
   }, []);
 
   return [observe, unobserve];
-}
-
-/**
- * @function getBoundingRect
- * @param entry
- * @param borderBox
- */
-export function getBoundingRect(entry: ResizeObserverEntry, borderBox?: boolean): Rect {
-  const mapping: Record<string, boolean> = {
-    tb: true,
-    'tb-rl': true,
-    'vertical-rl': true,
-    'vertical-lr': true
-  };
-  const { writingMode } = getComputedStyle(entry.target);
-  const [{ blockSize, inlineSize }] = borderBox ? entry.borderBoxSize : entry.contentBoxSize;
-
-  return mapping[writingMode] ? { width: blockSize, height: inlineSize } : { width: inlineSize, height: blockSize };
 }

@@ -4,6 +4,7 @@
 
 import {
   abortAnimationFrame,
+  getBoundingRect,
   getDuration,
   getMeasure,
   getScrolling,
@@ -22,7 +23,7 @@ import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
 import { useMeasureItem } from './useMeasureItem';
 import { useEffect, useRef, useState } from 'react';
-import { getBoundingRect, useResizeObserver } from './useResizeObserver';
+import { useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
 import { Item, Measure, Methods, OnScroll, Options, Rect, ScrollTo, ScrollToItem, State } from '../types';
 
@@ -212,7 +213,7 @@ export function useVirtual(
 
             if (index < measures.length) {
               const { size } = measures[index];
-              const nextSize = getBoundingRect(entry, true)[sizeKey];
+              const nextSize = getBoundingRect(entry)[sizeKey];
 
               if (nextSize !== size) {
                 measures[index] = getMeasure(index, nextSize, measures);
@@ -280,6 +281,8 @@ export function useVirtual(
 
   useEffect(() => {
     if (viewport) {
+      viewport.style.padding = '0px';
+
       const onScrollChange = () => {
         if (viewport && isMounted()) {
           const offset = viewport[scrollOffsetKey];
@@ -291,7 +294,7 @@ export function useVirtual(
       };
 
       observe(viewport, entry => {
-        const viewport = getBoundingRect(entry);
+        const viewport = getBoundingRect(entry, true);
 
         if (viewport[sizeKey] !== viewportRectRef.current[sizeKey]) {
           viewportRectRef.current = viewport;
