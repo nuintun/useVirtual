@@ -15,7 +15,9 @@ import {
   getVirtualRange,
   isFunction,
   isNumber,
-  now
+  now,
+  removeStyles,
+  setStyles
 } from '../utils';
 import { useKeys } from './useKeys';
 import { usePrevious } from './usePrevious';
@@ -255,34 +257,30 @@ export function useVirtual(
   const [frameOffset, frameSize] = state.frame;
 
   useEffect(() => {
-    if (frame) {
-      const { style } = frame;
-
-      style.margin = '0px';
-      style.boxSizing = 'border-box';
-    }
+    setStyles(frame, [
+      ['margin', '0', 'important'],
+      ['box-sizing', 'border-box', 'important']
+    ]);
   }, [frame]);
 
   useEffect(() => {
-    if (frame) {
-      const { style } = frame;
-
-      style[sizeKey] = `${frameSize}px`;
+    if (horizontal) {
+      removeStyles(frame, ['height', 'paddint-top']);
+    } else {
+      removeStyles(frame, ['width', 'paddint-left']);
     }
+  }, [frame, horizontal]);
+
+  useEffect(() => {
+    setStyles(frame, [[sizeKey, `${frameSize}px`, 'important']]);
   }, [frame, sizeKey, frameSize]);
 
   useEffect(() => {
-    if (frame) {
-      const { style } = frame;
-
-      style[offsetKey] = `${frameOffset}px`;
-    }
+    setStyles(frame, [[offsetKey, `${frameOffset}px`, 'important']]);
   }, [frame, offsetKey, frameOffset]);
 
   useEffect(() => {
     if (viewport) {
-      viewport.style.padding = '0px';
-
       const onScrollChange = () => {
         if (viewport && isMounted()) {
           const offset = viewport[scrollOffsetKey];
@@ -308,6 +306,8 @@ export function useVirtual(
           }
         }
       });
+
+      setStyles(viewport, [['padding', '0', 'important']]);
 
       viewport.addEventListener('scroll', onScrollChange, { passive: true });
 

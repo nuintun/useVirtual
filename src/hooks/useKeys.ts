@@ -8,7 +8,7 @@ export type SizeKey = 'width' | 'height';
 
 export type ScrollToKey = 'left' | 'top';
 
-export type OffsetKey = 'paddingLeft' | 'paddingTop';
+export type OffsetKey = 'padding-left' | 'padding-top';
 
 export type ScrollOffsetKey = 'scrollLeft' | 'scrollTop';
 
@@ -22,9 +22,9 @@ export type Keys = [sizeKey: SizeKey, offsetKey: OffsetKey, scrollToKey: ScrollT
 export function useKeys(horizontal?: boolean): Keys {
   return useMemo<Keys>(() => {
     if (horizontal) {
-      return ['width', 'paddingLeft', 'left', 'scrollLeft'];
+      return ['width', 'padding-left', 'left', 'scrollLeft'];
     }
 
-    return ['height', 'paddingTop', 'top', 'scrollTop'];
+    return ['height', 'padding-top', 'top', 'scrollTop'];
   }, [horizontal]);
 }

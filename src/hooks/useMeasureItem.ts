@@ -2,6 +2,7 @@
  * @module useMeasureItem
  */
 
+import { setStyles } from '../utils';
 import { useCallback, useEffect, useMemo } from 'react';
 import { ResizeObserverCallback, useResizeObserver } from './useResizeObserver';
 
@@ -35,7 +36,7 @@ export function useMeasureItem(): MeasureItem {
             unobserve(prevElement);
           }
 
-          element.style.margin = '0px';
+          setStyles(element, [['margin', '0', 'important']]);
 
           observe(element, callback);
 
