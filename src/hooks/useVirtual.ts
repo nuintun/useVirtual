@@ -265,9 +265,9 @@ export function useVirtual(
 
   useEffect(() => {
     if (horizontal) {
-      removeStyles(frame, ['height', 'paddint-top']);
+      removeStyles(frame, ['height', 'padding-top']);
     } else {
-      removeStyles(frame, ['width', 'paddint-left']);
+      removeStyles(frame, ['width', 'padding-left']);
     }
   }, [frame, horizontal]);
 
