@@ -8,7 +8,12 @@ export type VirtualRange = [start: number, end: number];
 
 export type Duration = number | ((distance: number) => number);
 
-export type Size = number | ((index: number, viewport: Viewport) => number);
+export type Size = number | ((index: number, viewport: Rect) => number);
+
+export interface Rect {
+  width: number;
+  height: number;
+}
 
 export interface Measure {
   end: number;
@@ -17,18 +22,13 @@ export interface Measure {
   start: number;
 }
 
-export interface Viewport {
-  width: number;
-  height: number;
-}
-
 export interface Item {
   readonly end: number;
   readonly size: number;
   readonly index: number;
   readonly start: number;
+  readonly viewport: Rect;
   readonly visible: boolean;
-  readonly viewport: Viewport;
   readonly measure: (element: HTMLElement | null) => void;
 }
 

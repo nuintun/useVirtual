@@ -4,23 +4,15 @@
 
 import { useMemo } from 'react';
 
-export type Keys = [
-  sizeKey: SizeKey,
-  offsetKey: OffsetKey,
-  boxSizeKey: BoxSizeKey,
-  scrollToKey: ScrollToKey,
-  scrollOffsetKey: ScrollOffsetKey
-];
-
 export type SizeKey = 'width' | 'height';
 
 export type ScrollToKey = 'left' | 'top';
 
-export type BoxSizeKey = 'inlineSize' | 'blockSize';
-
 export type OffsetKey = 'paddingLeft' | 'paddingTop';
 
 export type ScrollOffsetKey = 'scrollLeft' | 'scrollTop';
+
+export type Keys = [sizeKey: SizeKey, offsetKey: OffsetKey, scrollToKey: ScrollToKey, scrollOffsetKey: ScrollOffsetKey];
 
 /**
  * @function useKeys
@@ -30,9 +22,9 @@ export type ScrollOffsetKey = 'scrollLeft' | 'scrollTop';
 export function useKeys(horizontal?: boolean): Keys {
   return useMemo<Keys>(() => {
     if (horizontal) {
-      return ['width', 'paddingLeft', 'inlineSize', 'left', 'scrollLeft'];
+      return ['width', 'paddingLeft', 'left', 'scrollLeft'];
     }
 
-    return ['height', 'paddingTop', 'blockSize', 'top', 'scrollTop'];
+    return ['height', 'paddingTop', 'top', 'scrollTop'];
   }, [horizontal]);
 }

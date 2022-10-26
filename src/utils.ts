@@ -2,7 +2,7 @@
  * @module utils
  */
 
-import { Duration, Measure, Scrolling, ScrollToItemOptions, ScrollToOptions, Size, Viewport, VirtualRange } from './types';
+import { Duration, Measure, Rect, Scrolling, ScrollToItemOptions, ScrollToOptions, Size, VirtualRange } from './types';
 
 /**
  * @function easingImpl
@@ -122,7 +122,7 @@ export function getMeasure(index: number, size: number, measures: Measure[]): Me
  * @param measures 已缓存测量数组
  * @param viewport 视窗尺寸
  */
-export function getSize(index: number, size: Size, measures: Measure[], viewport: Viewport): number {
+export function getSize(index: number, size: Size, measures: Measure[], viewport: Rect): number {
   const measure = measures[index];
 
   return measure ? measure.size : isFunction(size) ? size(index, viewport) : size;

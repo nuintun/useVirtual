@@ -22,9 +22,9 @@ import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
 import { useMeasureItem } from './useMeasureItem';
 import { useEffect, useRef, useState } from 'react';
-import { useResizeObserver } from './useResizeObserver';
+import { getBoundingRect, useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
-import { Item, Measure, Methods, OnScroll, Options, ScrollTo, ScrollToItem, State, Viewport } from '../types';
+import { Item, Measure, Methods, OnScroll, Options, Rect, ScrollTo, ScrollToItem, State } from '../types';
 
 const enum Align {
   end = 'end',
@@ -40,42 +40,24 @@ export function useVirtual(
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
   const measureItem = useMeasureItem();
-  const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
-  const remeasureRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
   const onScrollRef = useLatestRef(onScroll);
   const [observe, unobserve] = useResizeObserver();
-  const viewportRectRef = useRef<Viewport>({ width: 0, height: 0 });
-  const [sizeKey, offsetKey, boxSizeKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
+  const viewportRectRef = useRef<Rect>({ width: 0, height: 0 });
+  const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
   const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
 
-  const measure = useStableCallback((start: number) => {
+  const remeasure = useStableCallback((start: number): void => {
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
 
-    let index = Math.min(start, measures.length);
-
-    const nextMeasures = measures.slice(0, index);
-
-    for (; index < length; index++) {
+    for (let index = start; index < length; index++) {
       const nextSize = getSize(index, size, measures, viewport);
 
-      nextMeasures.push(getMeasure(index, nextSize, nextMeasures));
-    }
-
-    measuresRef.current = nextMeasures;
-  });
-
-  const remeasure = useStableCallback(() => {
-    const { current: remeasureIndex } = remeasureIndexRef;
-
-    if (remeasureIndex >= 0) {
-      measure(remeasureIndex);
-
-      remeasureIndexRef.current = -1;
+      measures[index] = getMeasure(index, nextSize, measures);
     }
   });
 
@@ -89,8 +71,6 @@ export function useVirtual(
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
     if (isMounted()) {
-      remeasure();
-
       const onComplete = () => {
         if (isFunction(callback)) {
           requestAnimationFrame(() => {
@@ -124,7 +104,6 @@ export function useVirtual(
             const duration = getDuration(config.duration, Math.abs(distance));
 
             abortAnimationFrame(scrollRafRef.current);
-            abortAnimationFrame(remeasureRafRef.current);
 
             const scroll = () => {
               if (viewport && isMounted()) {
@@ -155,8 +134,6 @@ export function useVirtual(
 
   const scrollToItem = useStableCallback<ScrollToItem>((value, callback) => {
     if (isMounted()) {
-      remeasure();
-
       const { index, smooth, align } = getScrollToItemOptions(value);
 
       if (isNumber(index) && index >= 0) {
@@ -208,8 +185,6 @@ export function useVirtual(
 
   const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
     if (length > 0 && isMounted()) {
-      remeasure();
-
       const items: Item[] = [];
       const nextOffset = getOffset(offset);
       const { current: measures } = measuresRef;
@@ -232,29 +207,19 @@ export function useVirtual(
           size: measure.size,
           start: measure.start,
           visible: index >= start && index <= end,
-          measure: measureItem(index, ({ borderBoxSize: [borderBoxSize] }) => {
+          measure: measureItem(index, entry => {
             const { current: measures } = measuresRef;
 
             if (index < measures.length) {
               const { size } = measures[index];
-              const nextSize = borderBoxSize[boxSizeKey];
+              const nextSize = getBoundingRect(entry, true)[sizeKey];
 
               if (nextSize !== size) {
-                abortAnimationFrame(remeasureRafRef.current);
-
-                const { current: remeasureIndex } = remeasureIndexRef;
-
                 measures[index] = getMeasure(index, nextSize, measures);
 
-                if (remeasureIndex < 0) {
-                  remeasureIndexRef.current = index;
-                } else {
-                  remeasureIndexRef.current = Math.min(index, remeasureIndex);
-                }
+                remeasure(index);
 
-                remeasureRafRef.current = requestAnimationFrame(() => {
-                  update(offsetRef.current);
-                });
+                update(offsetRef.current);
               }
             }
           })
@@ -317,8 +282,6 @@ export function useVirtual(
     if (viewport) {
       const onScrollChange = () => {
         if (viewport && isMounted()) {
-          abortAnimationFrame(remeasureRafRef.current);
-
           const offset = viewport[scrollOffsetKey];
 
           offsetRef.current = offset;
@@ -327,11 +290,8 @@ export function useVirtual(
         }
       };
 
-      observe(viewport, ({ borderBoxSize: [borderBoxSize] }) => {
-        const viewport: Viewport = {
-          width: borderBoxSize.inlineSize,
-          height: borderBoxSize.blockSize
-        };
+      observe(viewport, entry => {
+        const viewport = getBoundingRect(entry);
 
         if (viewport[sizeKey] !== viewportRectRef.current[sizeKey]) {
           viewportRectRef.current = viewport;
@@ -360,9 +320,16 @@ export function useVirtual(
 
   useEffect(() => {
     if (isSizeChanged) {
-      measure(0);
+      remeasure(0);
     } else {
-      measure(Math.min(length, measuresRef.current.length));
+      const { current: measures } = measuresRef;
+      const { length: measuresLength } = measures;
+
+      if (measuresLength > length) {
+        measures.length = length;
+      } else if (measuresLength < length) {
+        remeasure(measuresLength);
+      }
     }
 
     const maxIndex = Math.max(0, length - 1);
