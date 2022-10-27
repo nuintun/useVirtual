@@ -80,7 +80,7 @@ export function isEqual<T>(next: T, prev: T, keys: (keyof T)[]): boolean {
  * @param prev
  */
 export function isEqualItem(next: Item, prev: Item): boolean {
-  if (!isEqual(prev, next, ['index', 'start', 'size', 'end', 'visible'])) {
+  if (!isEqual(prev, next, ['index', 'start', 'size', 'end', 'visible', 'scrolling'])) {
     return false;
   }
 
