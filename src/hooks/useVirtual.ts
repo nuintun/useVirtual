@@ -80,15 +80,15 @@ export function useVirtual(
 
       const onComplete = () => {
         if (isFunction(callback)) {
-          if (smooth) {
-            callback();
-          } else {
-            requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (smooth) {
+              callback();
+            } else {
               requestAnimationFrame(() => {
                 callback();
               });
-            });
-          }
+            }
+          });
         }
       };
 
