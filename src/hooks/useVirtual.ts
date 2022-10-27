@@ -44,6 +44,7 @@ export function useVirtual(
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
   const prevSize = usePrevious(size);
+  const scrollingRef = useRef(false);
   const measureItem = useMeasureItem();
   const scrollRafRef = useRef<number>();
   const scrollToRafRef = useRef<number>();
@@ -191,7 +192,7 @@ export function useVirtual(
     }
   });
 
-  const update = useStableCallback((offset: number, scrolling: boolean, onScroll?: OnScroll) => {
+  const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
     if (length > 0 && isMounted()) {
       const items: Item[] = [];
       const { current: measures } = measuresRef;
@@ -211,10 +212,10 @@ export function useVirtual(
         items.push({
           index,
           viewport,
-          scrolling,
           end: measure.end,
           size: measure.size,
           start: measure.start,
+          scrolling: scrollingRef.current,
           visible: index >= start && index <= end,
           measure: measureItem(index, entry => {
             const { current: measures } = measuresRef;
@@ -228,8 +229,8 @@ export function useVirtual(
 
                 remeasure(index);
 
-                if (!scrolling) {
-                  update(offsetRef.current, false);
+                if (!scrollingRef.current) {
+                  update(offsetRef.current);
                 }
               }
             }
@@ -301,11 +302,15 @@ export function useVirtual(
 
           offsetRef.current = offset;
 
-          update(offset, true, onScrollRef.current);
+          update(offset, onScrollRef.current);
+
+          scrollingRef.current = true;
 
           scrollRafRef.current = requestAnimationFrame(() => {
             scrollRafRef.current = requestAnimationFrame(() => {
-              update(offset, false);
+              scrollingRef.current = false;
+
+              update(offset);
             });
           });
         }
@@ -317,7 +322,7 @@ export function useVirtual(
         if (viewport[sizeKey] !== viewportRectRef.current[sizeKey]) {
           viewportRectRef.current = viewport;
 
-          update(offsetRef.current, false);
+          update(offsetRef.current);
 
           const { current: onResize } = onResizeRef;
 
@@ -358,7 +363,7 @@ export function useVirtual(
 
     anchorIndexRef.current = Math.min(maxIndex, anchor);
 
-    update(offsetRef.current, false);
+    update(offsetRef.current);
   }, [length, size]);
 
   return [state.items, { scrollTo, scrollToItem }];
