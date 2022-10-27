@@ -11,15 +11,15 @@ export type Duration = number | ((distance: number) => number);
 export type Size = number | ((index: number, viewport: Rect) => number);
 
 export interface Rect {
-  width: number;
-  height: number;
+  readonly width: number;
+  readonly height: number;
 }
 
 export interface Measure {
-  end: number;
-  size: number;
-  index: number;
-  start: number;
+  readonly end: number;
+  readonly size: number;
+  readonly index: number;
+  readonly start: number;
 }
 
 export interface Item {
@@ -29,6 +29,7 @@ export interface Item {
   readonly start: number;
   readonly viewport: Rect;
   readonly visible: boolean;
+  readonly scrolling: boolean;
   readonly measure: (element: HTMLElement | null) => void;
 }
 
@@ -69,25 +70,25 @@ export interface OnResize {
 }
 
 export interface Scrolling {
-  easing?: Easing;
-  duration?: Duration;
+  readonly easing?: Easing;
+  readonly duration?: Duration;
 }
 
 export interface Options {
-  size: Size;
-  onLoad?: onLoad;
-  overscan?: number;
-  onResize?: OnResize;
-  onScroll?: OnScroll;
-  horizontal?: boolean;
-  scrolling?: Scrolling;
-  frame: HTMLElement | null;
-  viewport: HTMLElement | null;
+  readonly size: Size;
+  readonly onLoad?: onLoad;
+  readonly overscan?: number;
+  readonly onResize?: OnResize;
+  readonly onScroll?: OnScroll;
+  readonly horizontal?: boolean;
+  readonly scrolling?: Scrolling;
+  readonly frame: HTMLElement | null;
+  readonly viewport: HTMLElement | null;
 }
 
 export interface ScrollToOptions {
-  offset: number;
-  smooth?: boolean;
+  readonly offset: number;
+  readonly smooth?: boolean;
 }
 
 export interface ScrollTo {
@@ -96,9 +97,9 @@ export interface ScrollTo {
 }
 
 export interface ScrollToItemOptions {
-  index: number;
-  smooth?: boolean;
-  align?: 'auto' | 'start' | 'center' | 'end';
+  readonly index: number;
+  readonly smooth?: boolean;
+  readonly align?: 'auto' | 'start' | 'center' | 'end';
 }
 
 export interface ScrollToItem {
@@ -107,6 +108,6 @@ export interface ScrollToItem {
 }
 
 export interface Methods {
-  scrollTo: ScrollTo;
-  scrollToItem: ScrollToItem;
+  readonly scrollTo: ScrollTo;
+  readonly scrollToItem: ScrollToItem;
 }

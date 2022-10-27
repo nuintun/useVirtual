@@ -43,8 +43,10 @@ export function useVirtual(
 ): [items: Item[], methods: Methods] {
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
+  const prevSize = usePrevious(size);
   const measureItem = useMeasureItem();
   const scrollRafRef = useRef<number>();
+  const scrollToRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
@@ -105,7 +107,7 @@ export function useVirtual(
             const distance = nextOffset - prevOffset;
             const duration = getDuration(config.duration, Math.abs(distance));
 
-            abortAnimationFrame(scrollRafRef.current);
+            abortAnimationFrame(scrollToRafRef.current);
 
             const scroll = () => {
               if (viewport && isMounted()) {
@@ -114,14 +116,14 @@ export function useVirtual(
                 scrollTo(config.easing(time) * distance + prevOffset);
 
                 if (time < 1) {
-                  scrollRafRef.current = requestAnimationFrame(scroll);
+                  scrollToRafRef.current = requestAnimationFrame(scroll);
                 } else {
                   onComplete();
                 }
               }
             };
 
-            scrollRafRef.current = requestAnimationFrame(scroll);
+            scrollToRafRef.current = requestAnimationFrame(scroll);
           } else {
             scrollTo(nextOffset);
 
@@ -185,7 +187,7 @@ export function useVirtual(
     }
   });
 
-  const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
+  const update = useStableCallback((offset: number, scrolling: boolean, onScroll?: OnScroll) => {
     if (length > 0 && isMounted()) {
       const items: Item[] = [];
       const { current: measures } = measuresRef;
@@ -205,6 +207,7 @@ export function useVirtual(
         items.push({
           index,
           viewport,
+          scrolling,
           end: measure.end,
           size: measure.size,
           start: measure.start,
@@ -221,7 +224,9 @@ export function useVirtual(
 
                 remeasure(index);
 
-                update(offsetRef.current);
+                if (!scrolling) {
+                  update(offsetRef.current, false);
+                }
               }
             }
           })
@@ -286,11 +291,19 @@ export function useVirtual(
     if (viewport) {
       const onScrollChange = () => {
         if (viewport && isMounted()) {
+          abortAnimationFrame(scrollRafRef.current);
+
           const offset = viewport[scrollOffsetKey];
 
           offsetRef.current = offset;
 
-          update(offset, onScrollRef.current);
+          update(offset, true, onScrollRef.current);
+
+          scrollRafRef.current = requestAnimationFrame(() => {
+            scrollRafRef.current = requestAnimationFrame(() => {
+              update(offset, false);
+            });
+          });
         }
       };
 
@@ -300,7 +313,7 @@ export function useVirtual(
         if (viewport[sizeKey] !== viewportRectRef.current[sizeKey]) {
           viewportRectRef.current = viewport;
 
-          update(offsetRef.current);
+          update(offsetRef.current, false);
 
           const { current: onResize } = onResizeRef;
 
@@ -322,10 +335,8 @@ export function useVirtual(
     }
   }, [viewport, sizeKey, scrollOffsetKey]);
 
-  const isSizeChanged = size.toString() !== usePrevious(size)?.toString();
-
   useEffect(() => {
-    if (isSizeChanged) {
+    if (size !== prevSize) {
       remeasure(0);
     } else {
       const { current: measures } = measuresRef;
@@ -343,8 +354,8 @@ export function useVirtual(
 
     anchorIndexRef.current = Math.min(maxIndex, anchor);
 
-    update(offsetRef.current);
-  }, [length, isSizeChanged]);
+    update(offsetRef.current, false);
+  }, [length, size]);
 
   return [state.items, { scrollTo, scrollToItem }];
 }
