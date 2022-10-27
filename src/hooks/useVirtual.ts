@@ -25,9 +25,9 @@ import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
 import { useMeasureItem } from './useMeasureItem';
-import { useEffect, useRef, useState } from 'react';
 import { useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Item, Measure, Methods, OnScroll, Options, Rect, ScrollTo, ScrollToItem, State } from '../types';
 
 const enum Align {
@@ -57,6 +57,10 @@ export function useVirtual(
   const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
   const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
 
+  const getScrollOffset = useCallback((offset: number) => {
+    return Math.min(offset, getScrollSize(measuresRef.current));
+  }, []);
+
   const remeasure = useStableCallback((start: number): void => {
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
@@ -66,12 +70,79 @@ export function useVirtual(
     }
   });
 
-  const getScrollOffset = useStableCallback((offset: number) => {
-    if (viewport) {
-      return Math.min(offset, getScrollSize(measuresRef.current));
-    }
+  const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
+    if (length > 0 && isMounted()) {
+      const items: Item[] = [];
+      const { current: measures } = measuresRef;
+      const nextOffset = getScrollOffset(offset);
+      const { current: viewport } = viewportRectRef;
+      const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorIndexRef.current);
 
-    return offsetRef.current;
+      anchorIndexRef.current = start;
+
+      const maxIndex = measures.length - 1;
+      const overStart = Math.max(start - overscan, 0);
+      const overEnd = Math.min(end + overscan, maxIndex);
+
+      for (let index = overStart; index <= overEnd; index++) {
+        const measure = measures[index];
+
+        items.push({
+          index,
+          viewport,
+          end: measure.end,
+          size: measure.size,
+          start: measure.start,
+          scrolling: scrollingRef.current,
+          visible: index >= start && index <= end,
+          measure: measureItem(index, entry => {
+            const { current: measures } = measuresRef;
+
+            if (index < measures.length) {
+              const { size } = measures[index];
+              const nextSize = getBoundingRect(entry)[sizeKey];
+
+              if (nextSize !== size) {
+                setMeasure(measures, index, nextSize);
+
+                remeasure(index);
+
+                if (!scrollingRef.current) {
+                  update(offsetRef.current);
+                }
+              }
+            }
+          })
+        });
+      }
+
+      setState(prevState => {
+        const nextState: State = {
+          items,
+          visible: [start, end],
+          frame: [measures[overStart].start, measures[maxIndex].end]
+        };
+
+        return isEqualState(nextState, prevState) ? prevState : nextState;
+      });
+
+      if (isFunction(onScroll)) {
+        onScroll({
+          offset: nextOffset,
+          visible: [start, end],
+          overscan: [overStart, overEnd],
+          forward: nextOffset > offsetRef.current
+        });
+      }
+
+      if (overEnd >= maxIndex && isFunction(onLoad)) {
+        onLoad({
+          offset: nextOffset,
+          visible: [start, end],
+          overscan: [overStart, overEnd]
+        });
+      }
+    }
   });
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
@@ -188,81 +259,6 @@ export function useVirtual(
             }
           });
         }
-      }
-    }
-  });
-
-  const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
-    if (length > 0 && isMounted()) {
-      const items: Item[] = [];
-      const { current: measures } = measuresRef;
-      const nextOffset = getScrollOffset(offset);
-      const { current: viewport } = viewportRectRef;
-      const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorIndexRef.current);
-
-      anchorIndexRef.current = start;
-
-      const maxIndex = measures.length - 1;
-      const overStart = Math.max(start - overscan, 0);
-      const overEnd = Math.min(end + overscan, maxIndex);
-
-      for (let index = overStart; index <= overEnd; index++) {
-        const measure = measures[index];
-
-        items.push({
-          index,
-          viewport,
-          end: measure.end,
-          size: measure.size,
-          start: measure.start,
-          scrolling: scrollingRef.current,
-          visible: index >= start && index <= end,
-          measure: measureItem(index, entry => {
-            const { current: measures } = measuresRef;
-
-            if (index < measures.length) {
-              const { size } = measures[index];
-              const nextSize = getBoundingRect(entry)[sizeKey];
-
-              if (nextSize !== size) {
-                setMeasure(measures, index, nextSize);
-
-                remeasure(index);
-
-                if (!scrollingRef.current) {
-                  update(offsetRef.current);
-                }
-              }
-            }
-          })
-        });
-      }
-
-      setState(prevState => {
-        const nextState: State = {
-          items,
-          visible: [start, end],
-          frame: [measures[overStart].start, measures[maxIndex].end]
-        };
-
-        return isEqualState(nextState, prevState) ? prevState : nextState;
-      });
-
-      if (isFunction(onScroll)) {
-        onScroll({
-          offset: nextOffset,
-          visible: [start, end],
-          overscan: [overStart, overEnd],
-          forward: nextOffset > offsetRef.current
-        });
-      }
-
-      if (overEnd >= maxIndex && isFunction(onLoad)) {
-        onLoad({
-          offset: nextOffset,
-          visible: [start, end],
-          overscan: [overStart, overEnd]
-        });
       }
     }
   });
