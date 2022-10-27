@@ -104,9 +104,11 @@ export function useVirtual(
 
                 remeasure(index);
 
-                if (!scrollingRef.current) {
-                  update(offsetRef.current);
-                }
+                requestAnimationFrame(() => {
+                  if (!scrollingRef.current) {
+                    update(offsetRef.current);
+                  }
+                });
               }
             }
           })
