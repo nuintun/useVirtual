@@ -75,17 +75,21 @@ export function useVirtual(
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
     if (isMounted()) {
+      const { offset, smooth } = getScrollToOptions(value);
+
       const onComplete = () => {
         if (isFunction(callback)) {
-          requestAnimationFrame(() => {
+          if (smooth) {
+            callback();
+          } else {
             requestAnimationFrame(() => {
-              callback();
+              requestAnimationFrame(() => {
+                callback();
+              });
             });
-          });
+          }
         }
       };
-
-      const { offset, smooth } = getScrollToOptions(value);
 
       if (isNumber(offset) && offset >= 0) {
         const { current: prevOffset } = offsetRef;
