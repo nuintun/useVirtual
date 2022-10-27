@@ -7,7 +7,7 @@ import {
   getBoundingRect,
   getDuration,
   getScrolling,
-  getScrollSize,
+  getScrollOffset,
   getScrollToItemOptions,
   getScrollToOptions,
   getSize,
@@ -26,9 +26,9 @@ import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
 import { useMeasureItem } from './useMeasureItem';
 import { useLayoutEffect } from './useLayoutEffect';
+import { useEffect, useRef, useState } from 'react';
 import { useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { Item, Measure, Methods, OnScroll, Options, Rect, ScrollTo, ScrollToItem, State } from '../types';
 
 const enum Align {
@@ -58,10 +58,6 @@ export function useVirtual(
   const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
   const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
 
-  const getScrollOffset = useCallback((offset: number) => {
-    return Math.min(offset, getScrollSize(measuresRef.current));
-  }, []);
-
   const remeasure = useStableCallback((start: number): void => {
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
@@ -75,8 +71,8 @@ export function useVirtual(
     if (length > 0 && isMounted()) {
       const items: Item[] = [];
       const { current: measures } = measuresRef;
-      const nextOffset = getScrollOffset(offset);
       const { current: viewport } = viewportRectRef;
+      const nextOffset = getScrollOffset(offset, measures);
       const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorIndexRef.current);
 
       anchorIndexRef.current = start;
@@ -166,7 +162,7 @@ export function useVirtual(
 
       if (isNumber(offset) && offset >= 0) {
         const { current: prevOffset } = offsetRef;
-        const nextOffset = getScrollOffset(offset);
+        const nextOffset = getScrollOffset(offset, measuresRef.current);
 
         if (nextOffset !== prevOffset) {
           const scrollTo = (offset: number): void => {

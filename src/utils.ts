@@ -166,11 +166,12 @@ export function abortAnimationFrame(handle: number | null | undefined): void {
 }
 
 /**
- * @function getScrollSize
+ * @function getScrollOffset
+ * @param offset
  * @param measures
  */
-export function getScrollSize(measures: Measure[]): number {
-  return measures[measures.length - 1]?.end ?? 0;
+export function getScrollOffset(offset: number, measures: Measure[]): number {
+  return Math.min(offset, measures[measures.length - 1]?.end ?? 0);
 }
 
 /**
