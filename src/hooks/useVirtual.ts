@@ -25,6 +25,7 @@ import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
 import { useMeasureItem } from './useMeasureItem';
+import { useLayoutEffect } from './useLayoutEffect';
 import { useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -263,16 +264,14 @@ export function useVirtual(
     }
   });
 
-  const [frameOffset, frameSize] = state.frame;
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     setStyles(frame, [
       ['margin', '0', 'important'],
       ['box-sizing', 'border-box', 'important']
     ]);
   }, [frame]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (horizontal) {
       removeStyles(frame, ['height', 'padding-top']);
     } else {
@@ -280,11 +279,17 @@ export function useVirtual(
     }
   }, [frame, horizontal]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    setStyles(viewport, [['padding', '0', 'important']]);
+  }, [viewport]);
+
+  const [frameOffset, frameSize] = state.frame;
+
+  useLayoutEffect(() => {
     setStyles(frame, [[sizeKey, `${frameSize}px`, 'important']]);
   }, [frame, sizeKey, frameSize]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setStyles(frame, [[offsetKey, `${frameOffset}px`, 'important']]);
   }, [frame, offsetKey, frameOffset]);
 
@@ -296,9 +301,9 @@ export function useVirtual(
 
           const offset = viewport[scrollOffsetKey];
 
-          offsetRef.current = offset;
-
           update(offset, onScrollRef.current);
+
+          offsetRef.current = offset;
 
           scrollingRef.current = true;
 
@@ -327,8 +332,6 @@ export function useVirtual(
           }
         }
       });
-
-      setStyles(viewport, [['padding', '0', 'important']]);
 
       viewport.addEventListener('scroll', onScrollChange, { passive: true });
 

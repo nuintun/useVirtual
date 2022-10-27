@@ -53,6 +53,12 @@ export function isNumber(value: unknown): value is number {
 }
 
 /**
+ * @type {isBrowser}
+ * @description 是否为浏览器环境
+ */
+export const isBrowser = typeof window !== 'undefined' && window.document;
+
+/**
  * @function isEqual
  * @param next
  * @param prev
