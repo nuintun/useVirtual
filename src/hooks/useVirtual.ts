@@ -46,9 +46,11 @@ export function useVirtual(
   const isMounted = useIsMounted();
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
+  const remeasureIndexRef = useRef(-1);
   const measureItem = useMeasureItem();
   const scrollRafRef = useRef<number>();
   const scrollToRafRef = useRef<number>();
+  const remeasureRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
@@ -69,6 +71,14 @@ export function useVirtual(
 
   const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
     if (length > 0 && isMounted()) {
+      const { current: remeasureIndex } = remeasureIndexRef;
+
+      if (remeasureIndex >= 0) {
+        remeasure(remeasureIndex);
+
+        remeasureIndexRef.current = -1;
+      }
+
       const items: Item[] = [];
       const { current: measures } = measuresRef;
       const { current: viewport } = viewportRectRef;
@@ -100,11 +110,19 @@ export function useVirtual(
               const nextSize = getBoundingRect(entry)[sizeKey];
 
               if (nextSize !== size) {
+                abortAnimationFrame(remeasureRafRef.current);
+
                 setMeasure(measures, index, nextSize);
 
-                remeasure(index);
+                const { current: remeasureIndex } = remeasureIndexRef;
 
-                requestAnimationFrame(() => {
+                if (remeasureIndex < 0) {
+                  remeasureIndexRef.current = index;
+                } else {
+                  remeasureIndexRef.current = Math.min(index, remeasureIndex);
+                }
+
+                remeasureRafRef.current = requestAnimationFrame(() => {
                   if (!scrollingRef.current) {
                     update(offsetRef.current);
                   }
