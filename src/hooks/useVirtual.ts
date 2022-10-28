@@ -307,25 +307,45 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   });
 
   useLayoutEffect(() => {
+    const priority = 'important';
+
     setStyles(frameRef.current, [
-      ['margin', '0', 'important'],
-      ['box-sizing', 'border-box', 'important']
+      ['margin', '0', priority],
+      ['box-sizing', 'border-box', priority]
     ]);
   }, []);
 
   useLayoutEffect(() => {
+    const priority = 'important';
+    const paddingTop = 'padding-top';
+    const paddingLeft = 'padding-left';
+    const paddingRight = 'padding-right';
+    const paddingBottom = 'padding-bottom';
+
     const { current: frame } = frameRef;
+    const { current: viewport } = viewportRef;
 
     if (horizontal) {
-      removeStyles(frame, ['height', 'padding-top']);
+      setStyles(viewport, [
+        [paddingLeft, '0', priority],
+        [paddingRight, '0', priority]
+      ]);
+      removeStyles(viewport, [paddingTop, paddingBottom]);
+
+      setStyles(frame, [[paddingRight, '0', priority]]);
+      removeStyles(frame, ['height', paddingTop, paddingBottom]);
     } else {
-      removeStyles(frame, ['width', 'padding-left']);
+      setStyles(viewport, [
+        [paddingTop, '0', priority],
+        [paddingBottom, '0', priority]
+      ]);
+
+      removeStyles(viewport, [paddingLeft, paddingRight]);
+
+      setStyles(frame, [[paddingBottom, '0', priority]]);
+      removeStyles(frame, ['width', paddingLeft, paddingRight]);
     }
   }, [horizontal]);
-
-  useLayoutEffect(() => {
-    setStyles(viewportRef.current, [['padding', '0', 'important']]);
-  }, []);
 
   const [frameOffset, frameSize] = state.frame;
 
