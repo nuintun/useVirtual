@@ -70,19 +70,26 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
   const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
 
+  const remeasure = useStableCallback((): void => {
+    const { current: measures } = measuresRef;
+    const { current: viewport } = viewportRectRef;
+    const { current: remeasureIndex } = remeasureIndexRef;
+
+    if (remeasureIndex >= 0) {
+      for (let index = remeasureIndex; index < count; index++) {
+        setMeasure(measures, index, getSize(index, size, measures, viewport));
+      }
+
+      remeasureIndexRef.current = -1;
+    }
+  });
+
   const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
     if (isMounted()) {
+      remeasure();
+
       const { current: measures } = measuresRef;
       const { current: viewport } = viewportRectRef;
-      const { current: remeasureIndex } = remeasureIndexRef;
-
-      if (remeasureIndex >= 0) {
-        for (let index = remeasureIndex; index < count; index++) {
-          setMeasure(measures, index, getSize(index, size, measures, viewport));
-        }
-
-        remeasureIndexRef.current = -1;
-      }
 
       const items: Item[] = [];
       const { length } = measures;
@@ -119,7 +126,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                   const { size } = measures[index];
                   const nextSize = getBoundingRect(entry)[sizeKey];
 
-                  if (nextSize !== size) {
+                  if (nextSize !== size && nextSize > 0) {
                     abortAnimationFrame(remeasureRafRef.current);
 
                     setMeasure(measures, index, nextSize);
@@ -207,6 +214,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       };
 
       if (isNumber(offset) && offset >= 0) {
+        remeasure();
+
         const { current: prevOffset } = offsetRef;
         const nextOffset = getScrollOffset(offset, measuresRef.current);
 
@@ -262,6 +271,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       const { index, smooth, align } = getScrollToItemOptions(value);
 
       if (isNumber(index) && index >= 0) {
+        remeasure();
+
         const { current: measures } = measuresRef;
 
         if (index < measures.length) {
@@ -290,6 +301,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           }
 
           scrollTo({ offset, smooth }, () => {
+            remeasure();
+
             const { current: measures } = measuresRef;
 
             if (index < measures.length) {
