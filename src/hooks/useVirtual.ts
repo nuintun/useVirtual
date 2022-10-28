@@ -110,7 +110,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             scrolling: scrollingRef.current,
             visible: index >= start && index <= end,
             observe: element => {
-              setStyles(element, [['margin', '0', 'important']]);
+              setStyles(element, [['margin', '0']]);
 
               return observe(element, entry => {
                 const { current: measures } = measuresRef;
@@ -309,18 +309,15 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   });
 
   useLayoutEffect(() => {
-    const priority = 'important';
-
     setStyles(frameRef.current, [
-      ['margin', '0', priority],
-      ['box-sizing', 'border-box', priority]
+      ['margin', '0'],
+      ['box-sizing', 'border-box']
     ]);
 
-    setStyles(viewportRef.current, [['padding', '0', priority]]);
+    setStyles(viewportRef.current, [['padding', '0']]);
   }, []);
 
   useLayoutEffect(() => {
-    const priority = 'important';
     const paddingTop = 'padding-top';
     const paddingLeft = 'padding-left';
     const paddingRight = 'padding-right';
@@ -329,10 +326,10 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     const { current: frame } = frameRef;
 
     if (horizontal) {
-      setStyles(frame, [[paddingRight, '0', priority]]);
+      setStyles(frame, [[paddingRight, '0']]);
       removeStyles(frame, ['height', paddingTop, paddingBottom]);
     } else {
-      setStyles(frame, [[paddingBottom, '0', priority]]);
+      setStyles(frame, [[paddingBottom, '0']]);
       removeStyles(frame, ['width', paddingLeft, paddingRight]);
     }
   }, [horizontal]);
@@ -340,11 +337,11 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const [frameOffset, frameSize] = state.frame;
 
   useLayoutEffect(() => {
-    setStyles(frameRef.current, [[sizeKey, `${frameSize}px`, 'important']]);
+    setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
   }, [sizeKey, frameSize]);
 
   useLayoutEffect(() => {
-    setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`, 'important']]);
+    setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`]]);
   }, [offsetKey, frameOffset]);
 
   useEffect(() => {
