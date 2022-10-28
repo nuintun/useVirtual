@@ -110,6 +110,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             scrolling: scrollingRef.current,
             visible: index >= start && index <= end,
             observe: element => {
+              setStyles(element, [['margin', '0', 'important']]);
+
               return observe(element, entry => {
                 const { current: measures } = measuresRef;
 
