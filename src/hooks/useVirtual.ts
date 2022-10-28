@@ -157,7 +157,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             offset: nextOffset,
             visible: [start, end],
             overscan: [overStart, overEnd],
-            forward: nextOffset > offsetRef.current
+            delta: nextOffset - offsetRef.current
           });
         }
 

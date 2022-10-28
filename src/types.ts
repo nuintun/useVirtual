@@ -50,8 +50,8 @@ export interface onLoad {
 }
 
 export interface ScrollEvent {
+  readonly delta: number;
   readonly offset: number;
-  readonly forward: boolean;
   readonly visible: VirtualRange;
   readonly overscan: VirtualRange;
 }
