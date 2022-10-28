@@ -313,6 +313,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       ['margin', '0', priority],
       ['box-sizing', 'border-box', priority]
     ]);
+
+    setStyles(viewportRef.current, [['padding', '0', priority]]);
   }, []);
 
   useLayoutEffect(() => {
@@ -323,25 +325,11 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     const paddingBottom = 'padding-bottom';
 
     const { current: frame } = frameRef;
-    const { current: viewport } = viewportRef;
 
     if (horizontal) {
-      setStyles(viewport, [
-        [paddingLeft, '0', priority],
-        [paddingRight, '0', priority]
-      ]);
-      removeStyles(viewport, [paddingTop, paddingBottom]);
-
       setStyles(frame, [[paddingRight, '0', priority]]);
       removeStyles(frame, ['height', paddingTop, paddingBottom]);
     } else {
-      setStyles(viewport, [
-        [paddingTop, '0', priority],
-        [paddingBottom, '0', priority]
-      ]);
-
-      removeStyles(viewport, [paddingLeft, paddingRight]);
-
       setStyles(frame, [[paddingBottom, '0', priority]]);
       removeStyles(frame, ['width', paddingLeft, paddingRight]);
     }
