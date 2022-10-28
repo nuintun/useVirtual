@@ -24,7 +24,6 @@ import { useKeys } from './useKeys';
 import { usePrevious } from './usePrevious';
 import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
-import { useMeasureItem } from './useMeasureItem';
 import { useLayoutEffect } from './useLayoutEffect';
 import { useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
@@ -57,8 +56,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const isMounted = useIsMounted();
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
+  const observe = useResizeObserver();
   const viewportRef = useRef<T>(null);
-  const measureItem = useMeasureItem();
   const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
   const scrollToRafRef = useRef<number>();
@@ -67,7 +66,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
   const onScrollRef = useLatestRef(onScroll);
-  const [observe, unobserve] = useResizeObserver();
   const viewportRectRef = useRef<Rect>({ width: 0, height: 0 });
   const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
   const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
@@ -111,34 +109,36 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             start: measure.start,
             scrolling: scrollingRef.current,
             visible: index >= start && index <= end,
-            measure: measureItem(index, entry => {
-              const { current: measures } = measuresRef;
+            observe: element => {
+              return observe(element, entry => {
+                const { current: measures } = measuresRef;
 
-              if (index < measures.length) {
-                const { size } = measures[index];
-                const nextSize = getBoundingRect(entry)[sizeKey];
+                if (index < measures.length) {
+                  const { size } = measures[index];
+                  const nextSize = getBoundingRect(entry)[sizeKey];
 
-                if (nextSize !== size) {
-                  abortAnimationFrame(remeasureRafRef.current);
+                  if (nextSize !== size) {
+                    abortAnimationFrame(remeasureRafRef.current);
 
-                  setMeasure(measures, index, nextSize);
+                    setMeasure(measures, index, nextSize);
 
-                  const { current: remeasureIndex } = remeasureIndexRef;
+                    const { current: remeasureIndex } = remeasureIndexRef;
 
-                  if (remeasureIndex < 0) {
-                    remeasureIndexRef.current = index;
-                  } else {
-                    remeasureIndexRef.current = Math.min(index, remeasureIndex);
-                  }
-
-                  remeasureRafRef.current = requestAnimationFrame(() => {
-                    if (!scrollingRef.current) {
-                      update(offsetRef.current);
+                    if (remeasureIndex < 0) {
+                      remeasureIndexRef.current = index;
+                    } else {
+                      remeasureIndexRef.current = Math.min(index, remeasureIndex);
                     }
-                  });
+
+                    remeasureRafRef.current = requestAnimationFrame(() => {
+                      if (!scrollingRef.current) {
+                        update(offsetRef.current);
+                      }
+                    });
+                  }
                 }
-              }
-            })
+              });
+            }
           });
         }
 
@@ -371,7 +371,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
         }
       };
 
-      observe(viewport, entry => {
+      const unobserve = observe(viewport, entry => {
         const viewport = getBoundingRect(entry, true);
 
         if (viewport[sizeKey] !== viewportRectRef.current[sizeKey]) {
@@ -390,7 +390,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       viewport.addEventListener('scroll', onScrollChange, { passive: true });
 
       return () => {
-        unobserve(viewport);
+        unobserve();
 
         viewport.removeEventListener('scroll', onScrollChange);
       };

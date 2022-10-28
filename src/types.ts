@@ -22,8 +22,12 @@ export interface Measure {
   readonly start: number;
 }
 
-export interface MeasureItem {
-  (element: HTMLElement | null): void;
+export interface Unobserve {
+  (): void;
+}
+
+export interface Observe {
+  (element: HTMLElement): Unobserve;
 }
 
 export interface Item {
@@ -32,9 +36,9 @@ export interface Item {
   readonly index: number;
   readonly start: number;
   readonly viewport: Rect;
+  readonly observe: Observe;
   readonly visible: boolean;
   readonly scrolling: boolean;
-  readonly measure: MeasureItem;
 }
 
 export interface State {
