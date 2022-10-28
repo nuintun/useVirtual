@@ -22,6 +22,10 @@ export interface Measure {
   readonly start: number;
 }
 
+export interface MeasureItem {
+  (element: HTMLElement | null): void;
+}
+
 export interface Item {
   readonly end: number;
   readonly size: number;
@@ -30,7 +34,7 @@ export interface Item {
   readonly viewport: Rect;
   readonly visible: boolean;
   readonly scrolling: boolean;
-  readonly measure: (element: HTMLElement | null) => void;
+  readonly measure: MeasureItem;
 }
 
 export interface State {
