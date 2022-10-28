@@ -39,12 +39,12 @@ const enum Align {
 }
 
 export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
-  length: number,
+  count: number,
   { size, onLoad, onResize, onScroll, scrolling, horizontal, overscan = 10 }: Options
 ): [items: Item[], viewportRef: RefObject<T>, frameRef: RefObject<U>, methods: Methods] {
   if (__DEV__) {
-    if (length !== length >>> 0) {
-      throw new RangeError('virtual length must be an integer not less than 0');
+    if (count !== count >>> 0) {
+      throw new RangeError('virtual count must be an integer not less than 0');
     }
 
     if (overscan !== overscan >>> 0) {
@@ -72,27 +72,19 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
   const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
 
-  const remeasure = useStableCallback((start: number): void => {
-    const { current: measures } = measuresRef;
-    const { current: viewport } = viewportRectRef;
-
-    for (let index = start; index < length; index++) {
-      setMeasure(measures, index, getSize(index, size, measures, viewport));
-    }
-  });
-
   const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
     if (isMounted()) {
+      const { current: measures } = measuresRef;
+      const { current: viewport } = viewportRectRef;
       const { current: remeasureIndex } = remeasureIndexRef;
 
       if (remeasureIndex >= 0) {
-        remeasure(remeasureIndex);
+        for (let index = remeasureIndex; index < count; index++) {
+          setMeasure(measures, index, getSize(index, size, measures, viewport));
+        }
 
         remeasureIndexRef.current = -1;
       }
-
-      const { current: measures } = measuresRef;
-      const { current: viewport } = viewportRectRef;
 
       const items: Item[] = [];
       const { length } = measures;
@@ -399,25 +391,25 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
   useEffect(() => {
     if (size !== prevSize) {
-      remeasure(0);
+      remeasureIndexRef.current = 0;
     } else {
       const { current: measures } = measuresRef;
-      const { length: prevLength } = measures;
+      const { length } = measures;
 
-      if (prevLength > length) {
-        measures.length = length;
-      } else if (prevLength < length) {
-        remeasure(prevLength);
+      if (length > count) {
+        measures.length = count;
+      } else if (length < count) {
+        remeasureIndexRef.current = length;
       }
     }
 
-    const maxIndex = Math.max(0, length - 1);
+    const maxIndex = Math.max(0, count - 1);
     const { current: anchor } = anchorIndexRef;
 
     anchorIndexRef.current = Math.min(maxIndex, anchor);
 
     update(offsetRef.current);
-  }, [length, size]);
+  }, [count, size]);
 
   return [state.items, viewportRef, frameRef, { scrollTo, scrollToItem }];
 }
