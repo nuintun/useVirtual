@@ -82,8 +82,6 @@ export interface Options {
   readonly onScroll?: OnScroll;
   readonly horizontal?: boolean;
   readonly scrolling?: Scrolling;
-  readonly frame: HTMLElement | null;
-  readonly viewport: HTMLElement | null;
 }
 
 export interface ScrollToOptions {

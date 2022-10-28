@@ -26,9 +26,9 @@ import { useIsMounted } from './useIsMounted';
 import { useLatestRef } from './useLatestRef';
 import { useMeasureItem } from './useMeasureItem';
 import { useLayoutEffect } from './useLayoutEffect';
-import { useEffect, useRef, useState } from 'react';
 import { useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
+import { RefObject, useEffect, useRef, useState } from 'react';
 import { Item, Measure, Methods, OnScroll, Options, Rect, ScrollTo, ScrollToItem, State } from '../types';
 
 const enum Align {
@@ -38,10 +38,10 @@ const enum Align {
   center = 'center'
 }
 
-export function useVirtual(
+export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   length: number,
-  { size, frame, onLoad, onResize, onScroll, viewport, scrolling, horizontal, overscan = 10 }: Options
-): [items: Item[], methods: Methods] {
+  { size, onLoad, onResize, onScroll, scrolling, horizontal, overscan = 10 }: Options
+): [items: Item[], viewportRef: RefObject<T>, frameRef: RefObject<U>, methods: Methods] {
   if (__DEV__) {
     if (length !== length >>> 0) {
       throw new RangeError('virtual length must be an integer not less than 0');
@@ -53,15 +53,17 @@ export function useVirtual(
   }
 
   const offsetRef = useRef(0);
+  const frameRef = useRef<U>(null);
   const isMounted = useIsMounted();
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
-  const remeasureIndexRef = useRef(-1);
+  const viewportRef = useRef<T>(null);
   const measureItem = useMeasureItem();
+  const remeasureIndexRef = useRef(-1);
   const scrollRafRef = useRef<number>();
   const scrollToRafRef = useRef<number>();
-  const remeasureRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
+  const remeasureRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
   const onScrollRef = useLatestRef(onScroll);
@@ -216,6 +218,8 @@ export function useVirtual(
 
         if (nextOffset !== prevOffset) {
           const scrollTo = (offset: number): void => {
+            const { current: viewport } = viewportRef;
+
             if (viewport) {
               viewport.scrollTo({
                 behavior: 'auto',
@@ -233,7 +237,7 @@ export function useVirtual(
             abortAnimationFrame(scrollToRafRef.current);
 
             const scroll = () => {
-              if (viewport && isMounted()) {
+              if (isMounted()) {
                 const time = Math.min((now() - start) / duration, 1);
 
                 scrollTo(config.easing(time) * distance + prevOffset);
@@ -311,35 +315,39 @@ export function useVirtual(
   });
 
   useLayoutEffect(() => {
-    setStyles(frame, [
+    setStyles(frameRef.current, [
       ['margin', '0', 'important'],
       ['box-sizing', 'border-box', 'important']
     ]);
-  }, [frame]);
+  }, []);
 
   useLayoutEffect(() => {
+    const { current: frame } = frameRef;
+
     if (horizontal) {
       removeStyles(frame, ['height', 'padding-top']);
     } else {
       removeStyles(frame, ['width', 'padding-left']);
     }
-  }, [frame, horizontal]);
+  }, [horizontal]);
 
   useLayoutEffect(() => {
-    setStyles(viewport, [['padding', '0', 'important']]);
-  }, [viewport]);
+    setStyles(viewportRef.current, [['padding', '0', 'important']]);
+  }, []);
 
   const [frameOffset, frameSize] = state.frame;
 
   useLayoutEffect(() => {
-    setStyles(frame, [[sizeKey, `${frameSize}px`, 'important']]);
-  }, [frame, sizeKey, frameSize]);
+    setStyles(frameRef.current, [[sizeKey, `${frameSize}px`, 'important']]);
+  }, [sizeKey, frameSize]);
 
   useLayoutEffect(() => {
-    setStyles(frame, [[offsetKey, `${frameOffset}px`, 'important']]);
-  }, [frame, offsetKey, frameOffset]);
+    setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`, 'important']]);
+  }, [offsetKey, frameOffset]);
 
   useEffect(() => {
+    const { current: viewport } = viewportRef;
+
     if (viewport) {
       const onScrollChange = () => {
         if (viewport && isMounted()) {
@@ -387,7 +395,7 @@ export function useVirtual(
         viewport.removeEventListener('scroll', onScrollChange);
       };
     }
-  }, [viewport, sizeKey, scrollOffsetKey]);
+  }, [sizeKey, scrollOffsetKey]);
 
   useEffect(() => {
     if (size !== prevSize) {
@@ -411,5 +419,5 @@ export function useVirtual(
     update(offsetRef.current);
   }, [length, size]);
 
-  return [state.items, { scrollTo, scrollToItem }];
+  return [state.items, viewportRef, frameRef, { scrollTo, scrollToItem }];
 }
