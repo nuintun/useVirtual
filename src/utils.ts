@@ -101,7 +101,7 @@ export function isEqualState(next: State, prev: State): boolean {
     return false;
   }
 
-  if (!isEqual(prev.visible, next.visible, [0, 1])) {
+  if (!isEqual(prev.range, next.range, [0, 1])) {
     return false;
   }
 
@@ -171,7 +171,7 @@ export function abortAnimationFrame(handle: number | null | undefined): void {
  * @param measures
  */
 export function getScrollOffset(offset: number, measures: Measure[]): number {
-  return Math.min(offset, measures[measures.length - 1]?.end ?? 0);
+  return Math.min(offset, measures[measures.length - 1]?.end || 0);
 }
 
 /**
@@ -226,7 +226,7 @@ export function getScrollToItemOptions(value: number | ScrollToItemOptions): Scr
  * @param size 列表项目尺寸
  */
 export function setMeasure(measures: Measure[], index: number, size: number): void {
-  const start = measures[index - 1]?.end ?? 0;
+  const start = measures[index - 1]?.end || 0;
 
   measures[index] = { index, start, size, end: start + size };
 }
@@ -239,9 +239,21 @@ export function setMeasure(measures: Measure[], index: number, size: number): vo
  * @param viewport 视窗尺寸
  */
 export function getSize(index: number, size: Size, measures: Measure[], viewport: Rect): number {
-  const measure = measures[index];
+  const isFunctionSize = isFunction(size);
+  const measure: Measure | undefined = measures[index];
+  const nextSize = measure?.size || (isFunctionSize ? size(index, viewport) : size);
 
-  return measure ? measure.size : isFunction(size) ? size(index, viewport) : size;
+  if (__DEV__) {
+    if (nextSize === 0) {
+      if (isFunctionSize) {
+        throw new RangeError('options.size return value must be greater than 0');
+      } else {
+        throw new RangeError('options.size must be greater than 0');
+      }
+    }
+  }
+
+  return nextSize;
 }
 
 /**

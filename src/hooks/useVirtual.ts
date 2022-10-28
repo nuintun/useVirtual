@@ -68,7 +68,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const onScrollRef = useLatestRef(onScroll);
   const viewportRectRef = useRef<Rect>({ width: 0, height: 0 });
   const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
-  const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], visible: [-1, -1] }));
+  const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], range: [-1, -1] }));
 
   const remeasure = useStableCallback((): void => {
     const { current: measures } = measuresRef;
@@ -100,12 +100,12 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       if (range) {
         const [start, end] = range;
         const maxIndex = length - 1;
-        const overStart = Math.max(start - overscan, 0);
-        const overEnd = Math.min(end + overscan, maxIndex);
+        const startIndex = Math.max(start - overscan, 0);
+        const endIndex = Math.min(end + overscan, maxIndex);
 
         anchorIndexRef.current = start;
 
-        for (let index = overStart; index <= overEnd; index++) {
+        for (let index = startIndex; index <= endIndex; index++) {
           const measure = measures[index];
 
           items.push({
@@ -153,8 +153,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
         const nextState: State = {
           items,
-          visible: [start, end],
-          frame: [measures[overStart].start, measures[maxIndex].end]
+          range: [startIndex, endIndex],
+          frame: [measures[startIndex].start, measures[maxIndex].end]
         };
 
         setState(prevState => {
@@ -165,22 +165,22 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           onScroll({
             offset: nextOffset,
             visible: [start, end],
-            overscan: [overStart, overEnd],
+            overscan: [startIndex, endIndex],
             delta: nextOffset - offsetRef.current
           });
         }
 
-        if (overEnd >= maxIndex && isFunction(onLoad)) {
+        if (endIndex >= maxIndex && isFunction(onLoad)) {
           onLoad({
             offset: nextOffset,
             visible: [start, end],
-            overscan: [overStart, overEnd]
+            overscan: [startIndex, endIndex]
           });
         }
       } else {
         setState({
           items,
-          visible: [-1, -1],
+          range: [-1, -1],
           frame: [0, viewportSize]
         });
 
@@ -306,10 +306,10 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             const { current: measures } = measuresRef;
 
             if (index < measures.length) {
-              const { visible } = state;
+              const { range } = state;
               const measure = measures[index];
 
-              if (index < visible[0] || index > visible[1] || measure.start !== start || measure.end !== end) {
+              if (index < range[0] || index > range[1] || measure.start !== start || measure.end !== end) {
                 scrollToItem({ index, smooth, align }, callback);
               } else if (isFunction(callback)) {
                 callback();
@@ -357,7 +357,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`]]);
   }, [offsetKey, frameOffset]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const { current: viewport } = viewportRef;
 
     if (viewport) {
@@ -412,6 +412,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   useEffect(() => {
     if (size !== prevSize) {
       remeasureIndexRef.current = 0;
+      measuresRef.current.length = 0;
     } else {
       const { current: measures } = measuresRef;
       const { length } = measures;
