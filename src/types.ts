@@ -36,7 +36,7 @@ export interface Item {
 export interface State {
   readonly items: Item[];
   readonly visible: VirtualRange;
-  readonly frame: [start: number, end: number];
+  readonly frame: [offset: number, size: number];
 }
 
 export interface LoadEvent {

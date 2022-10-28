@@ -42,6 +42,16 @@ export function useVirtual(
   length: number,
   { size, frame, onLoad, onResize, onScroll, viewport, scrolling, horizontal, overscan = 10 }: Options
 ): [items: Item[], methods: Methods] {
+  if (__DEV__) {
+    if (length !== length >>> 0) {
+      throw new RangeError('virtual length must be an integer not less than 0');
+    }
+
+    if (overscan !== overscan >>> 0) {
+      throw new RangeError('options.overscan must be an integer not less than 0');
+    }
+  }
+
   const offsetRef = useRef(0);
   const isMounted = useIsMounted();
   const prevSize = usePrevious(size);
@@ -70,7 +80,7 @@ export function useVirtual(
   });
 
   const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
-    if (length > 0 && isMounted()) {
+    if (isMounted()) {
       const { current: remeasureIndex } = remeasureIndexRef;
 
       if (remeasureIndex >= 0) {
@@ -79,85 +89,105 @@ export function useVirtual(
         remeasureIndexRef.current = -1;
       }
 
-      const items: Item[] = [];
       const { current: measures } = measuresRef;
       const { current: viewport } = viewportRectRef;
+
+      const items: Item[] = [];
+      const { length } = measures;
+      const viewportSize = viewport[sizeKey];
       const nextOffset = getScrollOffset(offset, measures);
-      const [start, end] = getVirtualRange(viewport[sizeKey], nextOffset, measures, anchorIndexRef.current);
+      const range = getVirtualRange(viewportSize, nextOffset, measures, anchorIndexRef.current);
 
-      anchorIndexRef.current = start;
+      if (range) {
+        const [start, end] = range;
+        const maxIndex = length - 1;
+        const overStart = Math.max(start - overscan, 0);
+        const overEnd = Math.min(end + overscan, maxIndex);
 
-      const maxIndex = measures.length - 1;
-      const overStart = Math.max(start - overscan, 0);
-      const overEnd = Math.min(end + overscan, maxIndex);
+        anchorIndexRef.current = start;
 
-      for (let index = overStart; index <= overEnd; index++) {
-        const measure = measures[index];
+        for (let index = overStart; index <= overEnd; index++) {
+          const measure = measures[index];
 
-        items.push({
-          index,
-          viewport,
-          end: measure.end,
-          size: measure.size,
-          start: measure.start,
-          scrolling: scrollingRef.current,
-          visible: index >= start && index <= end,
-          measure: measureItem(index, entry => {
-            const { current: measures } = measuresRef;
+          items.push({
+            index,
+            viewport,
+            end: measure.end,
+            size: measure.size,
+            start: measure.start,
+            scrolling: scrollingRef.current,
+            visible: index >= start && index <= end,
+            measure: measureItem(index, entry => {
+              const { current: measures } = measuresRef;
 
-            if (index < measures.length) {
-              const { size } = measures[index];
-              const nextSize = getBoundingRect(entry)[sizeKey];
+              if (index < measures.length) {
+                const { size } = measures[index];
+                const nextSize = getBoundingRect(entry)[sizeKey];
 
-              if (nextSize !== size) {
-                abortAnimationFrame(remeasureRafRef.current);
+                if (nextSize !== size) {
+                  abortAnimationFrame(remeasureRafRef.current);
 
-                setMeasure(measures, index, nextSize);
+                  setMeasure(measures, index, nextSize);
 
-                const { current: remeasureIndex } = remeasureIndexRef;
+                  const { current: remeasureIndex } = remeasureIndexRef;
 
-                if (remeasureIndex < 0) {
-                  remeasureIndexRef.current = index;
-                } else {
-                  remeasureIndexRef.current = Math.min(index, remeasureIndex);
-                }
-
-                remeasureRafRef.current = requestAnimationFrame(() => {
-                  if (!scrollingRef.current) {
-                    update(offsetRef.current);
+                  if (remeasureIndex < 0) {
+                    remeasureIndexRef.current = index;
+                  } else {
+                    remeasureIndexRef.current = Math.min(index, remeasureIndex);
                   }
-                });
-              }
-            }
-          })
-        });
-      }
 
-      setState(prevState => {
+                  remeasureRafRef.current = requestAnimationFrame(() => {
+                    if (!scrollingRef.current) {
+                      update(offsetRef.current);
+                    }
+                  });
+                }
+              }
+            })
+          });
+        }
+
         const nextState: State = {
           items,
           visible: [start, end],
           frame: [measures[overStart].start, measures[maxIndex].end]
         };
 
-        return isEqualState(nextState, prevState) ? prevState : nextState;
-      });
-
-      if (isFunction(onScroll)) {
-        onScroll({
-          offset: nextOffset,
-          visible: [start, end],
-          overscan: [overStart, overEnd],
-          forward: nextOffset > offsetRef.current
+        setState(prevState => {
+          return isEqualState(nextState, prevState) ? prevState : nextState;
         });
-      }
 
-      if (overEnd >= maxIndex && isFunction(onLoad)) {
-        onLoad({
-          offset: nextOffset,
-          visible: [start, end],
-          overscan: [overStart, overEnd]
+        if (isFunction(onScroll)) {
+          onScroll({
+            offset: nextOffset,
+            visible: [start, end],
+            overscan: [overStart, overEnd],
+            forward: nextOffset > offsetRef.current
+          });
+        }
+
+        if (overEnd >= maxIndex && isFunction(onLoad)) {
+          onLoad({
+            offset: nextOffset,
+            visible: [start, end],
+            overscan: [overStart, overEnd]
+          });
+        }
+      } else {
+        setState({
+          items,
+          visible: [-1, -1],
+          frame: [0, viewportSize]
         });
+
+        if (length <= 0 && isFunction(onLoad)) {
+          onLoad({
+            visible: [-1, -1],
+            overscan: [-1, -1],
+            offset: nextOffset
+          });
+        }
       }
     }
   });

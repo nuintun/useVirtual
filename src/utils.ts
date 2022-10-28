@@ -113,7 +113,7 @@ export function isEqualState(next: State, prev: State): boolean {
     return false;
   }
 
-  for (let index = 0; index >= 0; index--) {
+  for (let index = length - 1; index >= 0; index--) {
     if (!isEqualItem(prevItems[index], nextItems[index])) {
       return false;
     }
@@ -276,13 +276,15 @@ export function binarySearch(measures: Measure[], offset: number, start: number,
  * @param measures 已缓存测量数组
  * @param anchor 锚点索引
  */
-export function getVirtualRange(viewport: number, offset: number, measures: Measure[], anchor: number): VirtualRange {
-  if (viewport > 0) {
+export function getVirtualRange(viewport: number, offset: number, measures: Measure[], anchor: number): void | VirtualRange {
+  const { length } = measures;
+
+  if (viewport > 0 && length > 0) {
+    const maxIndex = length - 1;
     const offsetEnd = offset + viewport;
-    const maxIndex = measures.length - 1;
     const { start: anchorOffset } = measures[anchor];
 
-    let start: number = anchor;
+    let start = anchor;
 
     if (anchorOffset > offset) {
       start = binarySearch(measures, offset, 0, anchor);
@@ -304,8 +306,6 @@ export function getVirtualRange(viewport: number, offset: number, measures: Meas
 
     return [start, end];
   }
-
-  return [0, 0];
 }
 
 /**
