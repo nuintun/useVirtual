@@ -116,10 +116,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             scrolling: scrollingRef.current,
             visible: index >= start && index <= end,
             observe: element => {
-              setStyles(element, [
-                ['margin', '0'],
-                ['transform', 'none']
-              ]);
+              setStyles(element, [['margin', '0']]);
 
               return observe(element, entry => {
                 const { current: frame } = frameRef;
@@ -327,7 +324,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   useLayoutEffect(() => {
     setStyles(frameRef.current, [
       ['margin', '0'],
-      ['transform', 'none'],
       ['box-sizing', 'border-box']
     ]);
 
