@@ -53,6 +53,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const offsetRef = useRef(0);
   const frameRef = useRef<U>(null);
   const isMounted = useIsMounted();
+  const resizeIndexRef = useRef(-1);
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
   const observe = useResizeObserver();
@@ -61,7 +62,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const scrollRafRef = useRef<number>();
   const scrollToRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
-  const remeasureRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
   const onResizeRef = useLatestRef(onResize);
   const onScrollRef = useLatestRef(onScroll);
@@ -74,6 +74,13 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       return isEqualState(state, prevState) ? prevState : state;
     });
   }, []);
+
+  const scrollToOffset = useStableCallback((offset: number): void => {
+    viewportRef.current?.scrollTo({
+      behavior: 'auto',
+      [scrollToKey]: offset
+    });
+  });
 
   const remeasure = useStableCallback((): void => {
     const { current: measures } = measuresRef;
@@ -89,7 +96,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     }
   });
 
-  const update = useStableCallback((offset: number, onScroll?: OnScroll) => {
+  const update = useStableCallback((offset: number, onScroll?: OnScroll): void => {
     if (isMounted()) {
       remeasure();
 
@@ -131,12 +138,11 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                   const { current: measures } = measuresRef;
 
                   if (frame && index < measures.length) {
-                    const size = getBoundingRect(entry)[sizeKey];
+                    const { start, size } = measures[index];
+                    const nextSize = getBoundingRect(entry)[sizeKey];
 
-                    if (size !== measures[index].size && frame.contains(entry.target)) {
-                      abortAnimationFrame(remeasureRafRef.current);
-
-                      setMeasure(measures, index, size);
+                    if (nextSize !== size && frame.contains(entry.target)) {
+                      setMeasure(measures, index, nextSize);
 
                       const { current: remeasureIndex } = remeasureIndexRef;
 
@@ -146,11 +152,14 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                         remeasureIndexRef.current = Math.min(index, remeasureIndex);
                       }
 
-                      remeasureRafRef.current = requestAnimationFrame(() => {
-                        if (!scrollingRef.current) {
-                          update(offsetRef.current);
-                        }
-                      });
+                      // To prevent dynamic size from jumping during backward scrolling
+                      if (index < resizeIndexRef.current && start < nextOffset) {
+                        scrollToOffset(nextOffset + nextSize - size);
+                      } else if (!scrollingRef.current) {
+                        update(offsetRef.current);
+                      }
+
+                      resizeIndexRef.current = index;
                     }
                   }
                 },
@@ -225,17 +234,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
         const nextOffset = getScrollOffset(offset, measuresRef.current);
 
         if (nextOffset !== prevOffset) {
-          const scrollTo = (offset: number): void => {
-            const { current: viewport } = viewportRef;
-
-            if (viewport) {
-              viewport.scrollTo({
-                behavior: 'auto',
-                [scrollToKey]: offset
-              });
-            }
-          };
-
           if (smooth) {
             const start = now();
             const config = getScrolling(scrolling);
@@ -248,7 +246,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
               if (isMounted()) {
                 const time = Math.min((now() - start) / duration, 1);
 
-                scrollTo(config.easing(time) * distance + prevOffset);
+                scrollToOffset(config.easing(time) * distance + prevOffset);
 
                 if (time < 1) {
                   scrollToRafRef.current = requestAnimationFrame(scroll);
@@ -260,7 +258,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
             scrollToRafRef.current = requestAnimationFrame(scroll);
           } else {
-            scrollTo(nextOffset);
+            scrollToOffset(nextOffset);
 
             onComplete();
           }
