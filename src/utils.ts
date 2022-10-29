@@ -16,21 +16,20 @@ import {
 } from './types';
 
 /**
- * @function easingImpl
- * @description easeOutCubic
- * @description 缓动动画
+ * @function easeInOutSine
+ * @description easeInOutSine
  * @param time 当前动画时间，0-1 之间
  */
-export function easingImpl(time: number): number {
-  return (time - 1) ** 3 + 1;
+export function easeInOutSine(time: number): number {
+  return (1 - Math.cos(Math.PI * time)) / 2;
 }
 
 /**
- * @function durationImpl
- * @description 动画持续时间
- * @param distance 动画移动距离
+ * @function easingDuration
+ * @description 缓动动画持续时间
+ * @param distance 缓动动画移动总距离
  */
-export function durationImpl(distance: number): number {
+export function easingDuration(distance: number): number {
   return Math.min(Math.max(distance * 0.075, 100), 500);
 }
 
@@ -179,13 +178,12 @@ export function getScrollOffset(offset: number, measures: Measure[]): number {
  * @param scrolling
  */
 export function getScrolling(scrolling?: Scrolling): Required<Scrolling> {
-  if (scrolling) {
-    const { easing = easingImpl, duration = durationImpl } = scrolling;
+  const { easing, duration } = scrolling || {};
 
-    return { easing, duration };
-  }
-
-  return { easing: easingImpl, duration: durationImpl };
+  return {
+    easing: easing || easeInOutSine,
+    duration: duration || easingDuration
+  };
 }
 
 /**
