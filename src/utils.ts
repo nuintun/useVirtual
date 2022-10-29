@@ -165,15 +165,6 @@ export function abortAnimationFrame(handle: number | null | undefined): void {
 }
 
 /**
- * @function getScrollOffset
- * @param offset
- * @param measures
- */
-export function getScrollOffset(offset: number, measures: Measure[]): number {
-  return Math.min(offset, measures[measures.length - 1]?.end || 0);
-}
-
-/**
  * @function getScrolling
  * @param scrolling
  */
@@ -184,6 +175,15 @@ export function getScrolling(scrolling?: Scrolling): Required<Scrolling> {
     easing: easing || easeInOutSine,
     duration: duration || easingDuration
   };
+}
+
+/**
+ * @function getScrollOffset
+ * @param offset
+ * @param measures
+ */
+export function getScrollOffset(offset: number, measures: Measure[]): number {
+  return Math.min(offset, measures[measures.length - 1]?.end || 0);
 }
 
 /**
