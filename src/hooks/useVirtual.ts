@@ -26,7 +26,7 @@ import { useLatestRef } from './useLatestRef';
 import { useLayoutEffect } from './useLayoutEffect';
 import { useResizeObserver } from './useResizeObserver';
 import { useStableCallback } from './useStableCallback';
-import { RefObject, useEffect, useRef, useState } from 'react';
+import { RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { Item, Measure, Methods, OnScroll, Options, Rect, ScrollTo, ScrollToItem, State } from '../types';
 
 const enum Align {
@@ -68,6 +68,12 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const viewportRectRef = useRef<Rect>({ width: 0, height: 0 });
   const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
   const [state, setState] = useState<State>(() => ({ items: [], frame: [0, 0], range: [-1, -1] }));
+
+  const stateUpdate = useCallback((state: State): void => {
+    setState(prevState => {
+      return isEqualState(state, prevState) ? prevState : state;
+    });
+  }, []);
 
   const remeasure = useStableCallback((): void => {
     const { current: measures } = measuresRef;
@@ -155,14 +161,10 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           });
         }
 
-        const nextState: State = {
+        stateUpdate({
           items,
           range: [startIndex, endIndex],
           frame: [measures[startIndex].start, measures[maxIndex].end]
-        };
-
-        setState(prevState => {
-          return isEqualState(nextState, prevState) ? prevState : nextState;
         });
 
         if (isFunction(onScroll)) {
@@ -182,7 +184,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           });
         }
       } else {
-        setState({
+        stateUpdate({
           items,
           range: [-1, -1],
           frame: [0, viewportSize]
