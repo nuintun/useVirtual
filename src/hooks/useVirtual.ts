@@ -131,10 +131,9 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                   const { current: measures } = measuresRef;
 
                   if (frame && index < measures.length) {
-                    const { size } = measures[index];
                     const nextSize = getBoundingRect(entry)[sizeKey];
 
-                    if (nextSize !== size && frame.contains(entry.target)) {
+                    if (nextSize !== measures[index].size && frame.contains(entry.target)) {
                       abortAnimationFrame(remeasureRafRef.current);
 
                       setMeasure(measures, index, nextSize);
