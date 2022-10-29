@@ -100,7 +100,11 @@ export function isEqualState(next: State, prev: State): boolean {
     return false;
   }
 
-  if (!isEqual(prev.range, next.range, [0, 1])) {
+  if (!isEqual(prev.visible, next.visible, [0, 1])) {
+    return false;
+  }
+
+  if (!isEqual(prev.overscan, next.overscan, [0, 1])) {
     return false;
   }
 
@@ -165,6 +169,26 @@ export function abortAnimationFrame(handle: number | null | undefined): void {
 }
 
 /**
+ * @function setMeasure
+ * @param measures 已缓存测量数组
+ * @param index 索引
+ * @param size 列表项目尺寸
+ */
+export function setMeasure(measures: Measure[], index: number, size: number): void {
+  const start = measures[index - 1]?.end || 0;
+
+  measures[index] = { index, start, size, end: start + size };
+}
+
+/**
+ * @function getInitialState
+ * @description 获取初始化状态数据
+ */
+export function getInitialState(): State {
+  return { items: [], visible: [-1, -1], overscan: [-1, -1], frame: [0, 0] };
+}
+
+/**
  * @function getScrolling
  * @param scrolling
  */
@@ -215,18 +239,6 @@ export function getScrollToOptions(value: number | ScrollToOptions): ScrollToOpt
  */
 export function getScrollToItemOptions(value: number | ScrollToItemOptions): ScrollToItemOptions {
   return isNumber(value) ? { index: value } : value;
-}
-
-/**
- * @function setMeasure
- * @param measures 已缓存测量数组
- * @param index 索引
- * @param size 列表项目尺寸
- */
-export function setMeasure(measures: Measure[], index: number, size: number): void {
-  const start = measures[index - 1]?.end || 0;
-
-  measures[index] = { index, start, size, end: start + size };
 }
 
 /**

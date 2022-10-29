@@ -43,7 +43,8 @@ export interface Item {
 
 export interface State {
   readonly items: Item[];
-  readonly range: VirtualRange;
+  readonly visible: VirtualRange;
+  readonly overscan: VirtualRange;
   readonly frame: [offset: number, size: number];
 }
 
