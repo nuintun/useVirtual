@@ -324,7 +324,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   useLayoutEffect(() => {
     setStyles(frameRef.current, [
       ['margin', '0'],
-      ['box-sizing', 'border-box']
+      ['box-sizing', 'border-box'],
+      ['transform', 'translateZ(0)']
     ]);
 
     setStyles(viewportRef.current, [['padding', '0']]);
