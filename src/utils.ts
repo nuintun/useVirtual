@@ -100,14 +100,6 @@ export function isEqualState(next: State, prev: State): boolean {
     return false;
   }
 
-  if (!isEqual(prev.visible, next.visible, [0, 1])) {
-    return false;
-  }
-
-  if (!isEqual(prev.overscan, next.overscan, [0, 1])) {
-    return false;
-  }
-
   const { items: prevItems } = prev;
   const { items: nextItems } = next;
   const { length } = nextItems;
@@ -185,7 +177,7 @@ export function setMeasure(measures: Measure[], index: number, size: number): vo
  * @description 获取初始化状态数据
  */
 export function getInitialState(): State {
-  return { items: [], visible: [-1, -1], overscan: [-1, -1], frame: [0, 0] };
+  return { items: [], frame: [0, 0] };
 }
 
 /**

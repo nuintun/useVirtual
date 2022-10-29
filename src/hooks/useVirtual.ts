@@ -54,6 +54,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const offsetRef = useRef(0);
   const frameRef = useRef<U>(null);
   const isMounted = useIsMounted();
+  const resizeIndexRef = useRef(-1);
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
   const observe = useResizeObserver();
@@ -103,13 +104,13 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       const { current: measures } = measuresRef;
       const { current: viewport } = viewportRectRef;
 
-      const items: Item[] = [];
       const { length } = measures;
       const viewportSize = viewport[sizeKey];
       const nextOffset = getScrollOffset(offset, measures);
       const range = getVirtualRange(viewportSize, nextOffset, measures, anchorIndexRef.current);
 
       if (range) {
+        const items: Item[] = [];
         const [start, end] = range;
         const maxIndex = length - 1;
         const startIndex = Math.max(start - overscan, 0);
@@ -138,7 +139,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                   const { current: measures } = measuresRef;
 
                   if (frame && index < measures.length) {
-                    const { size } = measures[index];
+                    const { start, size } = measures[index];
                     const nextSize = getBoundingRect(entry)[sizeKey];
 
                     if (nextSize !== size && frame.contains(entry.target)) {
@@ -152,12 +153,16 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                         remeasureIndexRef.current = Math.min(index, remeasureIndex);
                       }
 
+                      const { current: offset } = offsetRef;
+
                       // To prevent dynamic size from jumping during backward scrolling
-                      if (index < state.visible[0]) {
-                        scrollToOffset(nextOffset + nextSize - size);
+                      if (index < resizeIndexRef.current && start < offset) {
+                        scrollToOffset(offset + nextSize - size);
                       } else if (!scrollingRef.current) {
-                        update(offsetRef.current);
+                        update(offset);
                       }
+
+                      resizeIndexRef.current = index;
                     }
                   }
                 },
@@ -169,8 +174,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
         stateUpdate({
           items,
-          visible: [start, end],
-          overscan: [startIndex, endIndex],
           frame: [measures[startIndex].start, measures[maxIndex].end]
         });
 
@@ -192,9 +195,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
         }
       } else {
         stateUpdate({
-          items,
-          visible: [-1, -1],
-          overscan: [-1, -1],
+          items: [],
           frame: [0, viewportSize]
         });
 
@@ -309,10 +310,12 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             const { current: measures } = measuresRef;
 
             if (index < measures.length) {
-              const { overscan } = state;
+              const { items } = state;
               const measure = measures[index];
+              const startIndex = items[0]?.index ?? -1;
+              const endIndex = items[items.length - 1]?.index ?? -1;
 
-              if (index < overscan[0] || index > overscan[1] || measure.start !== start || measure.end !== end) {
+              if (index < startIndex || index > endIndex || measure.start !== start || measure.end !== end) {
                 scrollToItem({ index, smooth, align }, callback);
               } else if (isFunction(callback)) {
                 callback();
