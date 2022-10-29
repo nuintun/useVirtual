@@ -118,35 +118,39 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             observe: element => {
               setStyles(element, [['margin', '0']]);
 
-              return observe(element, entry => {
-                const { current: frame } = frameRef;
-                const { current: measures } = measuresRef;
+              return observe(
+                element,
+                entry => {
+                  const { current: frame } = frameRef;
+                  const { current: measures } = measuresRef;
 
-                if (frame && index < measures.length) {
-                  const { size } = measures[index];
-                  const nextSize = getBoundingRect(entry)[sizeKey];
+                  if (frame && index < measures.length) {
+                    const { size } = measures[index];
+                    const nextSize = getBoundingRect(entry)[sizeKey];
 
-                  if (nextSize !== size && frame.contains(entry.target)) {
-                    abortAnimationFrame(remeasureRafRef.current);
+                    if (nextSize !== size && frame.contains(entry.target)) {
+                      abortAnimationFrame(remeasureRafRef.current);
 
-                    setMeasure(measures, index, nextSize);
+                      setMeasure(measures, index, nextSize);
 
-                    const { current: remeasureIndex } = remeasureIndexRef;
+                      const { current: remeasureIndex } = remeasureIndexRef;
 
-                    if (remeasureIndex < 0) {
-                      remeasureIndexRef.current = index;
-                    } else {
-                      remeasureIndexRef.current = Math.min(index, remeasureIndex);
-                    }
-
-                    remeasureRafRef.current = requestAnimationFrame(() => {
-                      if (!scrollingRef.current) {
-                        update(offsetRef.current);
+                      if (remeasureIndex < 0) {
+                        remeasureIndexRef.current = index;
+                      } else {
+                        remeasureIndexRef.current = Math.min(index, remeasureIndex);
                       }
-                    });
+
+                      remeasureRafRef.current = requestAnimationFrame(() => {
+                        if (!scrollingRef.current) {
+                          update(offsetRef.current);
+                        }
+                      });
+                    }
                   }
-                }
-              });
+                },
+                { box: 'border-box' }
+              );
             }
           });
         }
