@@ -14,7 +14,6 @@ import {
   getVirtualRange,
   isEqualState,
   isFunction,
-  isNumber,
   now,
   removeStyles,
   setMeasure,
@@ -120,13 +119,14 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
               setStyles(element, [['margin', '0']]);
 
               return observe(element, entry => {
+                const { current: frame } = frameRef;
                 const { current: measures } = measuresRef;
 
-                if (index < measures.length) {
+                if (frame && index < measures.length) {
                   const { size } = measures[index];
                   const nextSize = getBoundingRect(entry)[sizeKey];
 
-                  if (nextSize !== size && nextSize > 0) {
+                  if (nextSize !== size && frame.contains(entry.target)) {
                     abortAnimationFrame(remeasureRafRef.current);
 
                     setMeasure(measures, index, nextSize);
@@ -213,7 +213,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
         }
       };
 
-      if (isNumber(offset) && offset >= 0) {
+      if (offset >= 0) {
         remeasure();
 
         const { current: prevOffset } = offsetRef;
@@ -270,7 +270,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     if (isMounted()) {
       const { index, smooth, align } = getScrollToItemOptions(value);
 
-      if (isNumber(index) && index >= 0) {
+      if (index >= 0) {
         remeasure();
 
         const { current: measures } = measuresRef;
