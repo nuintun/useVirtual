@@ -103,16 +103,14 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       const { current: measures } = measuresRef;
       const { current: viewport } = viewportRectRef;
 
-      const { length } = measures;
       const viewportSize = viewport[sizeKey];
-
       const offset = getScrollOffset(viewportSize, scrollOffset, measures);
       const range = getVirtualRange(viewportSize, scrollOffset, measures, anchorIndexRef.current);
 
       if (range) {
         const items: Item[] = [];
         const [start, end] = range;
-        const maxIndex = length - 1;
+        const maxIndex = measures.length - 1;
         const startIndex = Math.max(start - overscan, 0);
         const endIndex = Math.min(end + overscan, maxIndex);
 
@@ -195,7 +193,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           frame: [0, -1]
         });
 
-        if (useLoadEvent && length <= 0 && isFunction(onLoad)) {
+        if (useLoadEvent && viewportSize > 0 && isFunction(onLoad)) {
           onLoad({
             offset,
             visible: [-1, -1],
