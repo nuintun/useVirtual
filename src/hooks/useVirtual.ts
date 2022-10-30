@@ -422,13 +422,13 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
         if (viewport[sizeKey] !== viewportRectRef.current[sizeKey]) {
           viewportRectRef.current = viewport;
 
-          update(offsetRef.current);
-
           const { current: onResize } = onResizeRef;
 
           if (isFunction(onResize)) {
             onResize(viewport);
           }
+
+          update(offsetRef.current);
         }
       });
 
