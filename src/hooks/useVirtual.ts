@@ -222,7 +222,9 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                  callback();
+                  if (isMounted()) {
+                    callback();
+                  }
                 });
               });
             });
