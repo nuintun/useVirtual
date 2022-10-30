@@ -192,7 +192,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       } else {
         stateUpdate({
           items: [],
-          frame: [0, viewportSize]
+          frame: [0, -1]
         });
 
         if (length <= 0 && isFunction(onLoad)) {
@@ -324,41 +324,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     }
   });
 
-  useEffect(() => {
-    if (size !== prevSize) {
-      remeasureIndexRef.current = 0;
-      measuresRef.current.length = 0;
-    } else {
-      const { current: measures } = measuresRef;
-      const { length } = measures;
-
-      if (length > count) {
-        measures.length = count;
-      } else if (length < count) {
-        remeasureIndexRef.current = length;
-      }
-    }
-
-    const maxIndex = Math.max(0, count - 1);
-    const { current: anchor } = anchorIndexRef;
-
-    anchorIndexRef.current = Math.min(maxIndex, anchor);
-
-    // Update is not necessary during initialization,
-    // The Update will be triggered when viewport size initialization.
-    if (prevSize) {
-      update(scrollOffsetRef.current);
-    }
-  }, [count, size]);
-
-  useEffect(() => {
-    // Update is not necessary during initialization,
-    // The Update will be triggered when viewport size initialization.
-    if (prevSize) {
-      update(scrollOffsetRef.current);
-    }
-  }, [horizontal]);
-
   useLayoutEffect(() => {
     setStyles(frameRef.current, [
       ['margin', '0'],
@@ -388,7 +353,13 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const [frameOffset, frameSize] = state.frame;
 
   useLayoutEffect(() => {
-    setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
+    const { current: frame } = frameRef;
+
+    if (frameSize < 0) {
+      removeStyles(frame, [sizeKey]);
+    } else {
+      setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
+    }
   }, [sizeKey, frameSize]);
 
   useLayoutEffect(() => {
@@ -444,6 +415,31 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       };
     }
   }, [sizeKey, scrollOffsetKey]);
+
+  useEffect(() => {
+    if (size !== prevSize) {
+      remeasureIndexRef.current = 0;
+      measuresRef.current.length = 0;
+    } else {
+      const { current: measures } = measuresRef;
+      const { length } = measures;
+
+      if (length > count) {
+        measures.length = count;
+      } else if (length < count) {
+        remeasureIndexRef.current = length;
+      }
+    }
+
+    const maxIndex = Math.max(0, count - 1);
+    const { current: anchor } = anchorIndexRef;
+
+    anchorIndexRef.current = Math.min(maxIndex, anchor);
+  }, [count, size]);
+
+  useEffect(() => {
+    update(scrollOffsetRef.current);
+  }, [count, size, horizontal]);
 
   return [state.items, viewportRef, frameRef, { scrollTo, scrollToItem }];
 }
