@@ -402,7 +402,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
           scrollingRef.current = true;
 
-          const scrollOffset = viewport[scrollOffsetKey];
+          const scrollOffset = viewport[scrollOffsetKey] | 0;
 
           update(scrollOffset, onScrollRef.current);
 
