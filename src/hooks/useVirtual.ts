@@ -217,11 +217,13 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
       const onComplete = () => {
         if (isFunction(callback)) {
-          // Delay 3 frames for painting completion
-          scrollToRafRef.current = requestAnimationFrame(() => {
-            scrollToRafRef.current = requestAnimationFrame(() => {
-              scrollToRafRef.current = requestAnimationFrame(() => {
-                callback();
+          // Delay 4 frames for painting completion
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  callback();
+                });
               });
             });
           });
