@@ -96,7 +96,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     }
   });
 
-  const update = useStableCallback((scrollOffset: number, onScroll?: OnScroll): void => {
+  const update = useStableCallback((scrollOffset: number, useLoadEvent: boolean, onScroll?: OnScroll): void => {
     if (isMounted()) {
       remeasure();
 
@@ -157,7 +157,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                       if (index <= anchorIndexRef.current && start < scrollOffset) {
                         scrollToOffset(scrollOffset + nextSize - size);
                       } else if (!scrollingRef.current) {
-                        update(scrollOffset);
+                        update(scrollOffset, true);
                       }
                     }
                   }
@@ -182,7 +182,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           });
         }
 
-        if (endIndex >= maxIndex && isFunction(onLoad)) {
+        if (useLoadEvent && endIndex >= maxIndex && isFunction(onLoad)) {
           onLoad({
             offset,
             visible: [start, end],
@@ -195,7 +195,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           frame: [0, -1]
         });
 
-        if (length <= 0 && isFunction(onLoad)) {
+        if (useLoadEvent && length <= 0 && isFunction(onLoad)) {
           onLoad({
             offset,
             visible: [-1, -1],
@@ -380,14 +380,17 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
           const scrollOffset = viewport[scrollOffsetKey];
 
-          update(scrollOffset, onScrollRef.current);
+          update(scrollOffset, true, onScrollRef.current);
 
           scrollOffsetRef.current = scrollOffset;
 
+          // Delay 2 frames for painting completion
           scrollRafRef.current = requestAnimationFrame(() => {
-            scrollingRef.current = false;
+            scrollRafRef.current = requestAnimationFrame(() => {
+              scrollingRef.current = false;
 
-            update(scrollOffsetRef.current);
+              update(scrollOffsetRef.current, false);
+            });
           });
         }
       };
@@ -404,7 +407,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             onResize(viewport);
           }
 
-          update(scrollOffsetRef.current);
+          update(scrollOffsetRef.current, true);
         }
       });
 
@@ -440,7 +443,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   }, [count, size]);
 
   useEffect(() => {
-    update(scrollOffsetRef.current);
+    update(scrollOffsetRef.current, true);
   }, [count, size, horizontal]);
 
   return [state.items, viewportRef, frameRef, { scrollTo, scrollToItem }];
