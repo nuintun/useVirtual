@@ -217,6 +217,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
       const onComplete = () => {
         if (isFunction(callback)) {
+          // Delay 3 frames for painting completion
           scrollToRafRef.current = requestAnimationFrame(() => {
             scrollToRafRef.current = requestAnimationFrame(() => {
               scrollToRafRef.current = requestAnimationFrame(() => {
