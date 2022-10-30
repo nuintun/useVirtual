@@ -327,6 +327,33 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     }
   });
 
+  useEffect(() => {
+    if (size !== prevSize) {
+      remeasureIndexRef.current = 0;
+      measuresRef.current.length = 0;
+    } else {
+      const { current: measures } = measuresRef;
+      const { length } = measures;
+
+      if (length > count) {
+        measures.length = count;
+      } else if (length < count) {
+        remeasureIndexRef.current = length;
+      }
+    }
+
+    const maxIndex = Math.max(0, count - 1);
+    const { current: anchor } = anchorIndexRef;
+
+    anchorIndexRef.current = Math.min(maxIndex, anchor);
+
+    // Update is not necessary during initialization,
+    // The Update will be triggered when viewport size initialization.
+    if (prevSize) {
+      update(offsetRef.current);
+    }
+  }, [count, size]);
+
   useLayoutEffect(() => {
     setStyles(frameRef.current, [
       ['margin', '0'],
@@ -414,29 +441,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
       };
     }
   }, [sizeKey, scrollOffsetKey]);
-
-  useEffect(() => {
-    if (size !== prevSize) {
-      remeasureIndexRef.current = 0;
-      measuresRef.current.length = 0;
-    } else {
-      const { current: measures } = measuresRef;
-      const { length } = measures;
-
-      if (length > count) {
-        measures.length = count;
-      } else if (length < count) {
-        remeasureIndexRef.current = length;
-      }
-    }
-
-    const maxIndex = Math.max(0, count - 1);
-    const { current: anchor } = anchorIndexRef;
-
-    anchorIndexRef.current = Math.min(maxIndex, anchor);
-
-    update(offsetRef.current);
-  }, [count, size]);
 
   return [state.items, viewportRef, frameRef, { scrollTo, scrollToItem }];
 }
