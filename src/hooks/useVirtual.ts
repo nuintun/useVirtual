@@ -349,6 +349,14 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     }
   }, [count, size]);
 
+  useEffect(() => {
+    // Update is not necessary during initialization,
+    // The Update will be triggered when viewport size initialization.
+    if (prevSize) {
+      update(offsetRef.current);
+    }
+  }, [horizontal]);
+
   useLayoutEffect(() => {
     setStyles(frameRef.current, [
       ['margin', '0'],
