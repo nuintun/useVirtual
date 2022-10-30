@@ -260,7 +260,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
   const scrollToItem = useStableCallback<ScrollToItem>((value, callback) => {
     if (isMounted()) {
-      const { index, smooth, align } = getScrollToItemOptions(value);
+      const { index, align, smooth } = getScrollToItemOptions(value);
 
       const getOffset = (index: number): number => {
         remeasure();
@@ -268,8 +268,8 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
         const { current: measures } = measuresRef;
         const maxIndex = measures.length - 1;
 
-        if (index >= 0 && maxIndex >= 0) {
-          index = Math.min(index, maxIndex);
+        if (maxIndex >= 0) {
+          index = Math.max(0, Math.min(index, maxIndex));
 
           const { start, size, end } = measures[index];
           const viewport = viewportRectRef.current[sizeKey];
@@ -298,20 +298,26 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           return Math.max(0, getScrollOffset(viewport, offset, measures));
         }
 
-        return 0;
+        return -1;
       };
 
-      scrollTo({ offset: getOffset(index), smooth }, () => {
-        requestAnimationFrame(() => {
+      const offset = getOffset(index);
+
+      if (offset >= 0) {
+        scrollTo({ offset, smooth }, () => {
           requestAnimationFrame(() => {
-            if (scrollOffsetRef.current !== getOffset(index)) {
-              scrollToItem({ index, smooth, align }, callback);
-            } else if (isFunction(callback)) {
-              callback();
-            }
+            requestAnimationFrame(() => {
+              const offset = getOffset(index);
+
+              if (offset >= 0 && scrollOffsetRef.current !== getOffset(index)) {
+                scrollToItem({ index, smooth, align }, callback);
+              } else if (isFunction(callback)) {
+                callback();
+              }
+            });
           });
         });
-      });
+      }
     }
   });
 
