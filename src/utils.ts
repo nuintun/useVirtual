@@ -177,7 +177,7 @@ export function setMeasure(measures: Measure[], index: number, size: number): vo
  * @description 获取初始化状态数据
  */
 export function getInitialState(): State {
-  return { items: [], frame: [0, 0] };
+  return { items: [], frame: [0, -1] };
 }
 
 /**

@@ -366,7 +366,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`]]);
   }, [offsetKey, frameOffset]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const { current: viewport } = viewportRef;
 
     if (viewport) {
