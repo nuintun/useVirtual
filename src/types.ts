@@ -37,8 +37,6 @@ export interface Item {
   readonly start: number;
   readonly viewport: Rect;
   readonly observe: Observe;
-  readonly visible: boolean;
-  readonly scrolling: boolean;
 }
 
 export interface State {

@@ -79,11 +79,11 @@ export function isEqual<T>(next: T, prev: T, keys: (keyof T)[]): boolean {
  * @param prev
  */
 export function isEqualItem(next: Item, prev: Item): boolean {
-  if (!isEqual(prev, next, ['index', 'start', 'size', 'end', 'visible', 'scrolling'])) {
+  if (!isEqual(next, prev, ['index', 'start', 'size', 'end'])) {
     return false;
   }
 
-  if (!isEqual(prev.viewport, next.viewport, ['width', 'height'])) {
+  if (!isEqual(next.viewport, prev.viewport, ['width', 'height'])) {
     return false;
   }
 
@@ -100,8 +100,8 @@ export function isEqualState(next: State, prev: State): boolean {
     return false;
   }
 
-  const { items: prevItems } = prev;
   const { items: nextItems } = next;
+  const { items: prevItems } = prev;
   const { length } = nextItems;
 
   if (length !== prevItems.length) {
@@ -109,7 +109,7 @@ export function isEqualState(next: State, prev: State): boolean {
   }
 
   for (let index = length - 1; index >= 0; index--) {
-    if (!isEqualItem(prevItems[index], nextItems[index])) {
+    if (!isEqualItem(nextItems[index], prevItems[index])) {
       return false;
     }
   }

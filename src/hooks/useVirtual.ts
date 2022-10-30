@@ -54,7 +54,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
   const offsetRef = useRef(0);
   const frameRef = useRef<U>(null);
   const isMounted = useIsMounted();
-  const resizeIndexRef = useRef(-1);
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
   const observe = useResizeObserver();
@@ -127,8 +126,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             end: measure.end,
             size: measure.size,
             start: measure.start,
-            scrolling: scrollingRef.current,
-            visible: index >= start && index <= end,
             observe: element => {
               setStyles(element, [['margin', '0']]);
 
@@ -156,13 +153,11 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                       const { current: offset } = offsetRef;
 
                       // To prevent dynamic size from jumping during backward scrolling
-                      if (index < resizeIndexRef.current && start < offset) {
+                      if (index <= anchorIndexRef.current && start < offset) {
                         scrollToOffset(offset + nextSize - size);
                       } else if (!scrollingRef.current) {
                         update(offset);
                       }
-
-                      resizeIndexRef.current = index;
                     }
                   }
                 },
