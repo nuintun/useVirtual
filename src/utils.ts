@@ -195,11 +195,14 @@ export function getScrolling(scrolling?: Scrolling): Required<Scrolling> {
 
 /**
  * @function getScrollOffset
+ * @param viewport
  * @param offset
  * @param measures
  */
-export function getScrollOffset(offset: number, measures: Measure[]): number {
-  return Math.min(offset, measures[measures.length - 1]?.end || 0);
+export function getScrollOffset(viewport: number, offset: number, measures: Measure[]): number {
+  const scrollSize = measures[measures.length - 1]?.end;
+
+  return Math.min(offset, scrollSize ? scrollSize - viewport : 0) | 0;
 }
 
 /**

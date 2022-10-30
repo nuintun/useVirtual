@@ -51,9 +51,9 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     }
   }
 
-  const offsetRef = useRef(0);
   const frameRef = useRef<U>(null);
   const isMounted = useIsMounted();
+  const scrollOffsetRef = useRef(0);
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
   const observe = useResizeObserver();
@@ -96,7 +96,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     }
   });
 
-  const update = useStableCallback((offset: number, onScroll?: OnScroll): void => {
+  const update = useStableCallback((scrollOffset: number, onScroll?: OnScroll): void => {
     if (isMounted()) {
       remeasure();
 
@@ -105,8 +105,9 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
       const { length } = measures;
       const viewportSize = viewport[sizeKey];
-      const nextOffset = getScrollOffset(offset, measures);
-      const range = getVirtualRange(viewportSize, nextOffset, measures, anchorIndexRef.current);
+
+      const offset = getScrollOffset(viewportSize, scrollOffset, measures);
+      const range = getVirtualRange(viewportSize, scrollOffset, measures, anchorIndexRef.current);
 
       if (range) {
         const items: Item[] = [];
@@ -150,13 +151,13 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
                         remeasureIndexRef.current = Math.min(index, remeasureIndex);
                       }
 
-                      const { current: offset } = offsetRef;
+                      const { current: scrollOffset } = scrollOffsetRef;
 
                       // To prevent dynamic size from jumping during backward scrolling
-                      if (index <= anchorIndexRef.current && start < offset) {
-                        scrollToOffset(offset + nextSize - size);
+                      if (index <= anchorIndexRef.current && start < scrollOffset) {
+                        scrollToOffset(scrollOffset + nextSize - size);
                       } else if (!scrollingRef.current) {
-                        update(offset);
+                        update(scrollOffset);
                       }
                     }
                   }
@@ -174,16 +175,16 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
         if (isFunction(onScroll)) {
           onScroll({
-            offset: nextOffset,
+            offset,
             visible: [start, end],
             overscan: [startIndex, endIndex],
-            delta: nextOffset - offsetRef.current
+            delta: offset - scrollOffsetRef.current
           });
         }
 
         if (endIndex >= maxIndex && isFunction(onLoad)) {
           onLoad({
-            offset: nextOffset,
+            offset,
             visible: [start, end],
             overscan: [startIndex, endIndex]
           });
@@ -196,9 +197,9 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
         if (length <= 0 && isFunction(onLoad)) {
           onLoad({
+            offset,
             visible: [-1, -1],
-            overscan: [-1, -1],
-            offset: nextOffset
+            overscan: [-1, -1]
           });
         }
       }
@@ -207,60 +208,52 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
     if (isMounted()) {
-      const { offset, smooth } = getScrollToOptions(value);
+      remeasure();
 
       const onComplete = () => {
         if (isFunction(callback)) {
           requestAnimationFrame(() => {
-            if (smooth) {
-              callback();
-            } else {
-              requestAnimationFrame(() => {
-                callback();
-              });
-            }
+            callback();
           });
         }
       };
 
-      if (offset >= 0) {
-        remeasure();
+      const config = getScrollToOptions(value);
+      const { current: scrollOffset } = scrollOffsetRef;
+      const viewportSize = viewportRectRef.current[sizeKey];
+      const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
 
-        const { current: prevOffset } = offsetRef;
-        const nextOffset = getScrollOffset(offset, measuresRef.current);
+      if (offset !== scrollOffset) {
+        if (config.smooth) {
+          const start = now();
+          const config = getScrolling(scrolling);
+          const distance = offset - scrollOffset;
+          const duration = getDuration(config.duration, Math.abs(distance));
 
-        if (nextOffset !== prevOffset) {
-          if (smooth) {
-            const start = now();
-            const config = getScrolling(scrolling);
-            const distance = nextOffset - prevOffset;
-            const duration = getDuration(config.duration, Math.abs(distance));
+          abortAnimationFrame(scrollToRafRef.current);
 
-            abortAnimationFrame(scrollToRafRef.current);
+          const scroll = (): void => {
+            if (isMounted()) {
+              const time = Math.min((now() - start) / duration, 1);
 
-            const scroll = () => {
-              if (isMounted()) {
-                const time = Math.min((now() - start) / duration, 1);
+              scrollToOffset(config.easing(time) * distance + scrollOffset);
 
-                scrollToOffset(config.easing(time) * distance + prevOffset);
-
-                if (time < 1) {
-                  scrollToRafRef.current = requestAnimationFrame(scroll);
-                } else {
-                  onComplete();
-                }
+              if (time < 1) {
+                scrollToRafRef.current = requestAnimationFrame(scroll);
+              } else {
+                onComplete();
               }
-            };
+            }
+          };
 
-            scrollToRafRef.current = requestAnimationFrame(scroll);
-          } else {
-            scrollToOffset(nextOffset);
-
-            onComplete();
-          }
+          scrollToRafRef.current = requestAnimationFrame(scroll);
         } else {
+          scrollToOffset(offset);
+
           onComplete();
         }
+      } else {
+        onComplete();
       }
     }
   });
@@ -269,16 +262,19 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     if (isMounted()) {
       const { index, smooth, align } = getScrollToItemOptions(value);
 
-      if (index >= 0) {
+      const getOffset = (index: number): number => {
         remeasure();
 
         const { current: measures } = measuresRef;
+        const maxIndex = measures.length - 1;
 
-        if (index < measures.length) {
-          let { current: offset } = offsetRef;
+        if (index >= 0 && maxIndex >= 0) {
+          index = Math.min(index, maxIndex);
 
           const { start, size, end } = measures[index];
           const viewport = viewportRectRef.current[sizeKey];
+
+          let { current: offset } = scrollOffsetRef;
 
           switch (align) {
             case Align.start:
@@ -299,26 +295,23 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
               break;
           }
 
-          scrollTo({ offset, smooth }, () => {
-            remeasure();
+          return Math.max(0, getScrollOffset(viewport, offset, measures));
+        }
 
-            const { current: measures } = measuresRef;
+        return 0;
+      };
 
-            if (index < measures.length) {
-              const { items } = state;
-              const measure = measures[index];
-              const startIndex = items[0]?.index ?? -1;
-              const endIndex = items[items.length - 1]?.index ?? -1;
-
-              if (index < startIndex || index > endIndex || measure.start !== start || measure.end !== end) {
-                scrollToItem({ index, smooth, align }, callback);
-              } else if (isFunction(callback)) {
-                callback();
-              }
+      scrollTo({ offset: getOffset(index), smooth }, () => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            if (scrollOffsetRef.current !== getOffset(index)) {
+              scrollToItem({ index, smooth, align }, callback);
+            } else if (isFunction(callback)) {
+              callback();
             }
           });
-        }
-      }
+        });
+      });
     }
   });
 
@@ -345,7 +338,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     // Update is not necessary during initialization,
     // The Update will be triggered when viewport size initialization.
     if (prevSize) {
-      update(offsetRef.current);
+      update(scrollOffsetRef.current);
     }
   }, [count, size]);
 
@@ -353,7 +346,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     // Update is not necessary during initialization,
     // The Update will be triggered when viewport size initialization.
     if (prevSize) {
-      update(offsetRef.current);
+      update(scrollOffsetRef.current);
     }
   }, [horizontal]);
 
@@ -401,20 +394,18 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
         if (viewport && isMounted()) {
           abortAnimationFrame(scrollRafRef.current);
 
-          const offset = viewport[scrollOffsetKey];
-
-          update(offset, onScrollRef.current);
-
-          offsetRef.current = offset;
-
           scrollingRef.current = true;
 
-          scrollRafRef.current = requestAnimationFrame(() => {
-            scrollRafRef.current = requestAnimationFrame(() => {
-              scrollingRef.current = false;
+          const scrollOffset = viewport[scrollOffsetKey];
 
-              update(offset);
-            });
+          update(scrollOffset, onScrollRef.current);
+
+          scrollOffsetRef.current = scrollOffset;
+
+          scrollRafRef.current = requestAnimationFrame(() => {
+            scrollingRef.current = false;
+
+            update(scrollOffsetRef.current);
           });
         }
       };
@@ -431,7 +422,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
             onResize(viewport);
           }
 
-          update(offsetRef.current);
+          update(scrollOffsetRef.current);
         }
       });
 
