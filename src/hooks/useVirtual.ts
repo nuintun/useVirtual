@@ -210,6 +210,11 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
     if (isMounted()) {
       remeasure();
 
+      const config = getScrollToOptions(value);
+      const { current: scrollOffset } = scrollOffsetRef;
+      const viewportSize = viewportRectRef.current[sizeKey];
+      const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
+
       const onComplete = () => {
         if (isFunction(callback)) {
           scrollToRafRef.current = requestAnimationFrame(() => {
@@ -221,11 +226,6 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           });
         }
       };
-
-      const config = getScrollToOptions(value);
-      const { current: scrollOffset } = scrollOffsetRef;
-      const viewportSize = viewportRectRef.current[sizeKey];
-      const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
 
       if (offset !== scrollOffset) {
         if (config.smooth) {
@@ -312,7 +312,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
           const nextOffset = getOffset(index);
 
           if (nextOffset >= 0 && nextOffset !== offset) {
-            scrollToItem({ index, smooth, align }, callback);
+            scrollToItem({ index, align, smooth }, callback);
           } else if (isFunction(callback)) {
             callback();
           }
