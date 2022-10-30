@@ -212,8 +212,12 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
       const onComplete = () => {
         if (isFunction(callback)) {
-          requestAnimationFrame(() => {
-            callback();
+          scrollToRafRef.current = requestAnimationFrame(() => {
+            scrollToRafRef.current = requestAnimationFrame(() => {
+              scrollToRafRef.current = requestAnimationFrame(() => {
+                callback();
+              });
+            });
           });
         }
       };
@@ -305,17 +309,13 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
       if (offset >= 0) {
         scrollTo({ offset, smooth }, () => {
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              const nextOffset = getOffset(index);
+          const nextOffset = getOffset(index);
 
-              if (nextOffset >= 0 && nextOffset !== offset) {
-                scrollToItem({ index, smooth, align }, callback);
-              } else if (isFunction(callback)) {
-                callback();
-              }
-            });
-          });
+          if (nextOffset >= 0 && nextOffset !== offset) {
+            scrollToItem({ index, smooth, align }, callback);
+          } else if (isFunction(callback)) {
+            callback();
+          }
         });
       }
     }
