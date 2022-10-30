@@ -307,9 +307,9 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
         scrollTo({ offset, smooth }, () => {
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-              const offset = getOffset(index);
+              const offset = getOffset(index) | 0;
 
-              if (offset >= 0 && scrollOffsetRef.current !== getOffset(index)) {
+              if (offset >= 0 && (scrollOffsetRef.current | 0) !== offset) {
                 scrollToItem({ index, smooth, align }, callback);
               } else if (isFunction(callback)) {
                 callback();
@@ -402,7 +402,7 @@ export function useVirtual<T extends HTMLElement, U extends HTMLElement>(
 
           scrollingRef.current = true;
 
-          const scrollOffset = viewport[scrollOffsetKey] | 0;
+          const scrollOffset = viewport[scrollOffsetKey];
 
           update(scrollOffset, onScrollRef.current);
 

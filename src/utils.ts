@@ -202,7 +202,7 @@ export function getScrolling(scrolling?: Scrolling): Required<Scrolling> {
 export function getScrollOffset(viewport: number, offset: number, measures: Measure[]): number {
   const scrollSize = measures[measures.length - 1]?.end;
 
-  return Math.min(offset, scrollSize ? scrollSize - viewport : 0) | 0;
+  return Math.min(offset, scrollSize ? scrollSize - viewport : 0);
 }
 
 /**
