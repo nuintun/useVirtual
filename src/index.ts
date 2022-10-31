@@ -421,7 +421,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         if (!isEqual(viewport, viewportRectRef.current, ['width', 'height'])) {
           viewportRectRef.current = viewport;
 
-          update(scrollOffsetRef.current, Events.onResize);
+          update(scrollOffsetRef.current, Events.onResize | Events.onReachEnd);
         }
       });
 
