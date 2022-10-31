@@ -6,7 +6,6 @@ import { now } from './utils/now';
 import { Align } from './utils/align';
 import { getSize } from './utils/size';
 import { useKeys } from './hooks/useKeys';
-import { isEqual, isEqualState } from './utils/equal';
 import { setMeasure } from './utils/measure';
 import { getBoundingRect } from './utils/rect';
 import { getInitialState } from './utils/state';
@@ -15,7 +14,7 @@ import { getScrollOffset } from './utils/offset';
 import { Events, useEvent } from './utils/events';
 import { abortAnimationFrame } from './utils/raf';
 import { usePrevious } from './hooks/usePrevious';
-import { useIsMounted } from './hooks/useIsMounted';
+import { isEqual, isEqualState } from './utils/equal';
 import { removeStyles, setStyles } from './utils/styles';
 import { useResizeObserver } from './hooks/useResizeObserver';
 import { useStableCallback } from './hooks/useStableCallback';
@@ -46,9 +45,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   }
 
   const frameRef = useRef<U>(null);
-  const isMounted = useIsMounted();
   const scrollOffsetRef = useRef(0);
   const scrollToRef = useRef(false);
+  const isMountedRef = useRef(false);
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
   const observe = useResizeObserver();
@@ -90,7 +89,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   });
 
   const update = useStableCallback((scrollOffset: number, events: number): void => {
-    if (isMounted()) {
+    if (isMountedRef.current) {
       remeasure();
 
       const { current: measures } = measuresRef;
@@ -205,7 +204,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   });
 
   const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
-    if (isMounted()) {
+    if (isMountedRef.current) {
       remeasure();
 
       scrollToRef.current = true;
@@ -224,7 +223,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
             requestAnimationFrame(() => {
               requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
-                  if (isMounted()) {
+                  if (isMountedRef.current) {
                     callback();
                   }
                 });
@@ -244,7 +243,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           abortAnimationFrame(scrollToRafRef.current);
 
           const scroll = (): void => {
-            if (isMounted()) {
+            if (isMountedRef.current) {
               const time = Math.min((now() - start) / duration, 1);
 
               scrollToOffset(config.easing(time) * distance + scrollOffset);
@@ -270,7 +269,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   });
 
   const scrollToItem = useStableCallback<ScrollToItem>((value, callback) => {
-    if (isMounted()) {
+    if (isMountedRef.current) {
       const { index, align, smooth } = getScrollToItemOptions(value);
 
       const getOffset = (index: number): number => {
@@ -329,6 +328,14 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   });
 
   useLayoutEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
+  useLayoutEffect(() => {
     setStyles(frameRef.current, [
       ['margin', '0'],
       ['box-sizing', 'border-box']
@@ -375,7 +382,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
     if (viewport) {
       const onScrollChange = () => {
-        if (viewport && isMounted()) {
+        if (isMountedRef.current && viewport) {
           abortAnimationFrame(scrollRafRef.current);
 
           scrollingRef.current = true;
