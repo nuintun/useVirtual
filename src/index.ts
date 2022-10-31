@@ -6,7 +6,7 @@ import { now } from './utils/now';
 import { Align } from './utils/align';
 import { getSize } from './utils/size';
 import { useKeys } from './hooks/useKeys';
-import { isEqualState } from './utils/equal';
+import { isEqual, isEqualState } from './utils/equal';
 import { setMeasure } from './utils/measure';
 import { getBoundingRect } from './utils/rect';
 import { getInitialState } from './utils/state';
@@ -400,7 +400,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       const unobserve = observe(viewport, entry => {
         const viewport = getBoundingRect(entry, true);
 
-        if (viewport[sizeKey] !== viewportRectRef.current[sizeKey]) {
+        if (!isEqual(viewport, viewportRectRef.current, ['width', 'height'])) {
           viewportRectRef.current = viewport;
 
           update(scrollOffsetRef.current, Events.onResize);
