@@ -2,8 +2,10 @@
  * @module useLayoutEffect
  */
 
-import { isBrowser } from '../utils';
 import { useEffect, useLayoutEffect as useLayoutEffectImpl } from 'react';
+
+// 是否为浏览器环境
+const isBrowser = typeof window !== 'undefined' && window.document;
 
 /**
  * @function useLayoutEffect
