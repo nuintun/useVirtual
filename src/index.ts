@@ -18,7 +18,7 @@ import { isEqual, isEqualState } from './utils/equal';
 import { removeStyles, setStyles } from './utils/styles';
 import { useResizeObserver } from './hooks/useResizeObserver';
 import { useStableCallback } from './hooks/useStableCallback';
-import { RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getDuration, getScrolling, getScrollToItemOptions, getScrollToOptions } from './utils/scroll';
 import { Item, Measure, Methods, Options, Rect, ScrollTo, ScrollToItem, State } from './utils/interface';
 
@@ -61,20 +61,20 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const viewportRectRef = useRef<Rect>({ width: 0, height: 0 });
   const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
 
-  const stateUpdate = useCallback((state: State): void => {
-    setState(prevState => {
-      return isEqualState(state, prevState) ? prevState : state;
-    });
-  }, []);
-
-  const scrollToOffset = useStableCallback((offset: number): void => {
+  const scrollToOffset = (offset: number): void => {
     viewportRef.current?.scrollTo({
       behavior: 'auto',
       [scrollToKey]: offset
     });
-  });
+  };
 
-  const remeasure = useStableCallback((): void => {
+  const stateUpdate = (state: State): void => {
+    setState(prevState => {
+      return isEqualState(state, prevState) ? prevState : state;
+    });
+  };
+
+  const remeasure = (): void => {
     const { current: measures } = measuresRef;
     const { current: viewport } = viewportRectRef;
     const { current: remeasureIndex } = remeasureIndexRef;
@@ -86,7 +86,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
       remeasureIndexRef.current = -1;
     }
-  });
+  };
 
   const update = useStableCallback((scrollOffset: number, events: number): void => {
     if (isMountedRef.current) {
