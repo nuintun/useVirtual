@@ -97,12 +97,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
       const { current: options } = optionsRef;
       const { current: measures } = measuresRef;
-      const { size: sizeKey } = keysRef.current;
       const { current: viewport } = viewportRectRef;
 
-      const viewportSize = viewport[sizeKey];
+      const viewportSize = viewport[keysRef.current.size];
       const offset = getScrollOffset(viewportSize, scrollOffset, measures);
-      const range = getVirtualRange(viewportSize, scrollOffset, measures, anchorIndexRef.current);
+      const range = getVirtualRange(viewportSize, offset, measures, anchorIndexRef.current);
 
       if (range) {
         const items: Item[] = [];
@@ -134,7 +133,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
                   if (frame && index < measures.length) {
                     const { start, size } = measures[index];
-                    const nextSize = getBoundingRect(entry)[sizeKey];
+                    const nextSize = getBoundingRect(entry)[keysRef.current.size];
 
                     if (nextSize !== size && frame.contains(entry.target)) {
                       setMeasure(measures, index, nextSize);
