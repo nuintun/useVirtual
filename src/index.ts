@@ -48,6 +48,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const frameRef = useRef<U>(null);
   const isMounted = useIsMounted();
   const scrollOffsetRef = useRef(0);
+  const scrollToRef = useRef(false);
   const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
   const observe = useResizeObserver();
@@ -133,6 +134,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                     if (nextSize !== size && frame.contains(entry.target)) {
                       setMeasure(measures, index, nextSize);
 
+                      const { current: scrollOffset } = scrollOffsetRef;
                       const { current: remeasureIndex } = remeasureIndexRef;
 
                       if (remeasureIndex < 0) {
@@ -141,10 +143,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                         remeasureIndexRef.current = Math.min(index, remeasureIndex);
                       }
 
-                      const { current: scrollOffset } = scrollOffsetRef;
-
                       // To prevent dynamic size from jumping during backward scrolling
-                      if (index <= anchorIndexRef.current && start < scrollOffset) {
+                      if (!scrollToRef.current && index <= anchorIndexRef.current && start < scrollOffset) {
                         scrollToOffset(scrollOffset + nextSize - size);
                       } else if (!scrollingRef.current) {
                         update(scrollOffset, Events.onLoad);
@@ -208,12 +208,16 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     if (isMounted()) {
       remeasure();
 
+      scrollToRef.current = true;
+
       const config = getScrollToOptions(value);
       const { current: scrollOffset } = scrollOffsetRef;
       const viewportSize = viewportRectRef.current[sizeKey];
       const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
 
       const onComplete = () => {
+        scrollToRef.current = false;
+
         if (callback) {
           // Delay 4 frames for painting completion
           requestAnimationFrame(() => {
