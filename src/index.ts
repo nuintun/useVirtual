@@ -225,10 +225,10 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         if (callback) {
           // Delay 4 frames for painting completion
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
+          scrollToRafRef.current = requestAnimationFrame(() => {
+            scrollToRafRef.current = requestAnimationFrame(() => {
+              scrollToRafRef.current = requestAnimationFrame(() => {
+                scrollToRafRef.current = requestAnimationFrame(() => {
                   if (isMountedRef.current) {
                     callback();
                   }
