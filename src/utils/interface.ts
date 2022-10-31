@@ -2,6 +2,8 @@
  * @module types
  */
 
+import { RefObject } from 'react';
+
 export type Easing = (time: number) => number;
 
 export type VirtualRange = [start: number, end: number];
@@ -81,6 +83,7 @@ export interface Scrolling {
 
 export interface Options {
   readonly size: Size;
+  readonly count: number;
   readonly onLoad?: onLoad;
   readonly overscan?: number;
   readonly onResize?: OnResize;
@@ -114,3 +117,10 @@ export interface Methods {
   readonly scrollTo: ScrollTo;
   readonly scrollToItem: ScrollToItem;
 }
+
+export type Virtual<T extends HTMLElement, U extends HTMLElement> = [
+  items: Item[],
+  viewportRef: RefObject<T>,
+  frameRef: RefObject<U>,
+  methods: Methods
+];

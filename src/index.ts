@@ -3,9 +3,9 @@
  */
 
 import { now } from './utils/now';
+import { Keys } from './utils/keys';
 import { Align } from './utils/align';
 import { getSize } from './utils/size';
-import { useKeys } from './hooks/useKeys';
 import { setMeasure } from './utils/measure';
 import { getBoundingRect } from './utils/rect';
 import { getInitialState } from './utils/state';
@@ -14,32 +14,33 @@ import { getScrollOffset } from './utils/offset';
 import { Events, useEvent } from './utils/events';
 import { abortAnimationFrame } from './utils/raf';
 import { usePrevious } from './hooks/usePrevious';
+import { useLatestRef } from './hooks/useLatestRef';
 import { isEqual, isEqualState } from './utils/equal';
 import { removeStyles, setStyles } from './utils/styles';
 import { useResizeObserver } from './hooks/useResizeObserver';
-import { useStableCallback } from './hooks/useStableCallback';
-import { RefObject, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { getDuration, getScrolling, getScrollToItemOptions, getScrollToOptions } from './utils/scroll';
-import { Item, Measure, Methods, Options, Rect, ScrollTo, ScrollToItem, State } from './utils/interface';
+import { Item, Measure, Options, Rect, ScrollTo, ScrollToItem, State, Virtual } from './utils/interface';
 
 // Export typescript types
-export type { Item, Options, ScrollToItemOptions, ScrollToOptions } from './utils/interface';
+export type { Item, Options, ScrollToItemOptions, ScrollToOptions, Virtual } from './utils/interface';
 
 /**
  * @function useVirtual
  * @param count
  * @param options
  */
-export default function useVirtual<T extends HTMLElement, U extends HTMLElement>(
-  count: number,
-  { size, onLoad, onResize, onScroll, scrolling, horizontal, overscan = 10 }: Options
-): [items: Item[], viewportRef: RefObject<T>, frameRef: RefObject<U>, methods: Methods] {
+export default function useVirtual<T extends HTMLElement, U extends HTMLElement>(options: Options): Virtual<T, U> {
+  const { size, count, horizontal } = options;
+
   if (__DEV__) {
     if (count !== count >>> 0) {
       throw new RangeError('virtual count must be an integer not less than 0');
     }
 
-    if (overscan !== overscan >>> 0) {
+    const { overscan } = options;
+
+    if (overscan !== overscan! >>> 0) {
       throw new RangeError('options.overscan must be an integer not less than 0');
     }
   }
@@ -48,7 +49,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const scrollOffsetRef = useRef(0);
   const scrollToRef = useRef(false);
   const isMountedRef = useRef(false);
-  const prevSize = usePrevious(size);
   const scrollingRef = useRef(false);
   const observe = useResizeObserver();
   const viewportRef = useRef<T>(null);
@@ -56,26 +56,29 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const scrollRafRef = useRef<number>();
   const scrollToRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
+  const optionsRef = useLatestRef(options);
   const measuresRef = useRef<Measure[]>([]);
+  const prevSize = usePrevious(options.size);
+  const keysRef = useLatestRef(Keys[horizontal ? 1 : 0]);
   const [state, setState] = useState<State>(getInitialState);
   const viewportRectRef = useRef<Rect>({ width: 0, height: 0 });
-  const [sizeKey, offsetKey, scrollToKey, scrollOffsetKey] = useKeys(horizontal);
 
-  const scrollToOffset = (offset: number): void => {
+  const scrollToOffset = useCallback((offset: number): void => {
     viewportRef.current?.scrollTo({
       behavior: 'auto',
-      [scrollToKey]: offset
+      [keysRef.current.scrollTo]: offset
     });
-  };
+  }, []);
 
-  const stateUpdate = (state: State): void => {
+  const stateUpdate = useCallback((state: State): void => {
     setState(prevState => {
       return isEqualState(state, prevState) ? prevState : state;
     });
-  };
+  }, []);
 
-  const remeasure = (): void => {
+  const remeasure = useCallback((): void => {
     const { current: measures } = measuresRef;
+    const { size, count } = optionsRef.current;
     const { current: viewport } = viewportRectRef;
     const { current: remeasureIndex } = remeasureIndexRef;
 
@@ -86,13 +89,15 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
       remeasureIndexRef.current = -1;
     }
-  };
+  }, []);
 
-  const update = useStableCallback((scrollOffset: number, events: number): void => {
+  const update = useCallback((scrollOffset: number, events: number): void => {
     if (isMountedRef.current) {
       remeasure();
 
+      const { current: options } = optionsRef;
       const { current: measures } = measuresRef;
+      const { size: sizeKey } = keysRef.current;
       const { current: viewport } = viewportRectRef;
 
       const viewportSize = viewport[sizeKey];
@@ -102,6 +107,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       if (range) {
         const items: Item[] = [];
         const [start, end] = range;
+        const { overscan = 10 } = options;
         const maxIndex = measures.length - 1;
         const startIndex = Math.max(start - overscan, 0);
         const endIndex = Math.min(end + overscan, maxIndex);
@@ -163,11 +169,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         });
 
         if (useEvent(events, Events.onResize)) {
-          onResize?.(viewport);
+          options.onResize?.(viewport);
         }
 
         if (useEvent(events, Events.onScroll)) {
-          onScroll?.({
+          options.onScroll?.({
             offset,
             visible: [start, end],
             overscan: [startIndex, endIndex],
@@ -176,7 +182,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         }
 
         if (endIndex >= maxIndex && useEvent(events, Events.onLoad)) {
-          onLoad?.({
+          options.onLoad?.({
             offset,
             visible: [start, end],
             overscan: [startIndex, endIndex]
@@ -189,11 +195,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         });
 
         if (useEvent(events, Events.onResize)) {
-          onResize?.(viewport);
+          options.onResize?.(viewport);
         }
 
         if (viewportSize > 0 && useEvent(events, Events.onLoad)) {
-          onLoad?.({
+          options.onLoad?.({
             offset,
             visible: [-1, -1],
             overscan: [-1, -1]
@@ -201,9 +207,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         }
       }
     }
-  });
+  }, []);
 
-  const scrollTo = useStableCallback<ScrollTo>((value, callback) => {
+  const scrollTo = useCallback<ScrollTo>((value, callback) => {
     if (isMountedRef.current) {
       remeasure();
 
@@ -211,7 +217,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
       const config = getScrollToOptions(value);
       const { current: scrollOffset } = scrollOffsetRef;
-      const viewportSize = viewportRectRef.current[sizeKey];
+      const viewportSize = viewportRectRef.current[keysRef.current.size];
       const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
 
       const onComplete = () => {
@@ -236,8 +242,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       if (offset !== scrollOffset) {
         if (config.smooth) {
           const start = now();
-          const config = getScrolling(scrolling);
           const distance = offset - scrollOffset;
+          const { current: options } = optionsRef;
+          const config = getScrolling(options.scrolling);
           const duration = getDuration(config.duration, Math.abs(distance));
 
           abortAnimationFrame(scrollToRafRef.current);
@@ -266,9 +273,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         onComplete();
       }
     }
-  });
+  }, []);
 
-  const scrollToItem = useStableCallback<ScrollToItem>((value, callback) => {
+  const scrollToItem = useCallback<ScrollToItem>((value, callback) => {
     if (isMountedRef.current) {
       const { index, align, smooth } = getScrollToItemOptions(value);
 
@@ -282,7 +289,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           index = Math.max(0, Math.min(index, maxIndex));
 
           const { start, size, end } = measures[index];
-          const viewport = viewportRectRef.current[sizeKey];
+          const viewport = viewportRectRef.current[keysRef.current.size];
 
           let { current: offset } = scrollOffsetRef;
 
@@ -325,7 +332,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         });
       }
     }
-  });
+  }, []);
 
   useLayoutEffect(() => {
     isMountedRef.current = true;
@@ -365,19 +372,22 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
   useLayoutEffect(() => {
     const { current: frame } = frameRef;
+    const { size: sizeKey } = keysRef.current;
 
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
     } else {
       setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
     }
-  }, [sizeKey, frameSize]);
+  }, [horizontal, frameSize]);
 
   useLayoutEffect(() => {
-    setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`]]);
-  }, [offsetKey, frameOffset]);
+    const { offset: offsetKey } = keysRef.current;
 
-  useEffect(() => {
+    setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`]]);
+  }, [horizontal, frameOffset]);
+
+  useLayoutEffect(() => {
     const { current: viewport } = viewportRef;
 
     if (viewport) {
@@ -387,7 +397,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
           scrollingRef.current = true;
 
-          const scrollOffset = viewport[scrollOffsetKey];
+          const scrollOffset = viewport[keysRef.current.scrollOffset];
 
           update(scrollOffset, Events.onScroll | Events.onLoad);
 
@@ -422,7 +432,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         viewport.removeEventListener('scroll', onScrollChange);
       };
     }
-  }, [sizeKey, scrollOffsetKey]);
+  }, []);
 
   useEffect(() => {
     if (size !== prevSize) {
