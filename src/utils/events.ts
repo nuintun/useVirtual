@@ -3,9 +3,9 @@
  */
 
 export const enum Events {
-  onLoad = 1 << 0,
-  onResize = 1 << 1,
-  onScroll = 1 << 2
+  onResize = 1 << 0,
+  onScroll = 1 << 1,
+  onReachEnd = 1 << 2
 }
 
 /**

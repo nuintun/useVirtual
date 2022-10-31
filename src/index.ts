@@ -151,7 +151,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                       if (!scrollToRef.current && index <= anchorIndexRef.current && start < scrollOffset) {
                         scrollToOffset(scrollOffset + nextSize - size);
                       } else if (!scrollingRef.current) {
-                        update(scrollOffset, Events.onLoad);
+                        update(scrollOffset, Events.onReachEnd);
                       }
                     }
                   }
@@ -180,9 +180,10 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
 
-        if (endIndex >= maxIndex && useEvent(events, Events.onLoad)) {
-          options.onLoad?.({
+        if (end >= maxIndex && useEvent(events, Events.onReachEnd)) {
+          options.onReachEnd?.({
             offset,
+            index: end,
             visible: [start, end],
             overscan: [startIndex, endIndex]
           });
@@ -197,9 +198,10 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           options.onResize?.(viewport);
         }
 
-        if (viewportSize > 0 && useEvent(events, Events.onLoad)) {
-          options.onLoad?.({
+        if (viewportSize > 0 && useEvent(events, Events.onReachEnd)) {
+          options.onReachEnd?.({
             offset,
+            index: -1,
             visible: [-1, -1],
             overscan: [-1, -1]
           });
@@ -398,7 +400,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
           const scrollOffset = viewport[keysRef.current.scrollOffset];
 
-          update(scrollOffset, Events.onScroll | Events.onLoad);
+          update(scrollOffset, Events.onScroll | Events.onReachEnd);
 
           scrollOffsetRef.current = scrollOffset;
 
@@ -455,7 +457,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   }, [count, size]);
 
   useEffect(() => {
-    update(scrollOffsetRef.current, Events.onLoad);
+    update(scrollOffsetRef.current, Events.onReachEnd);
   }, [count, size, horizontal]);
 
   return [state.items, viewportRef, frameRef, { scrollTo, scrollToItem }];

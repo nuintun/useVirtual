@@ -1,5 +1,5 @@
 /**
- * @module types
+ * @module interface
  */
 
 import { RefObject } from 'react';
@@ -46,14 +46,18 @@ export interface State {
   readonly frame: [offset: number, size: number];
 }
 
-export interface LoadEvent {
-  readonly offset: number;
-  readonly visible: VirtualRange;
-  readonly overscan: VirtualRange;
+export interface Scrolling {
+  readonly easing?: Easing;
+  readonly duration?: Duration;
 }
 
-export interface onLoad {
-  (event: LoadEvent): void;
+export interface ResizeEvent {
+  readonly width: number;
+  readonly height: number;
+}
+
+export interface OnResize {
+  (event: ResizeEvent): void;
 }
 
 export interface ScrollEvent {
@@ -67,29 +71,26 @@ export interface OnScroll {
   (event: ScrollEvent): void;
 }
 
-export interface ResizeEvent {
-  readonly width: number;
-  readonly height: number;
+export interface ReachEndEvent {
+  readonly index: number;
+  readonly offset: number;
+  readonly visible: VirtualRange;
+  readonly overscan: VirtualRange;
 }
 
-export interface OnResize {
-  (event: ResizeEvent): void;
-}
-
-export interface Scrolling {
-  readonly easing?: Easing;
-  readonly duration?: Duration;
+export interface onReachEnd {
+  (event: ReachEndEvent): void;
 }
 
 export interface Options {
   readonly size: Size;
   readonly count: number;
-  readonly onLoad?: onLoad;
   readonly overscan?: number;
   readonly onResize?: OnResize;
   readonly onScroll?: OnScroll;
   readonly horizontal?: boolean;
   readonly scrolling?: Scrolling;
+  readonly onReachEnd?: onReachEnd;
 }
 
 export interface ScrollToOptions {
