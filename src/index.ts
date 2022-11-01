@@ -24,7 +24,7 @@ import { Item, Measure, Options, Rect, ScrollTo, ScrollToItem, State, Virtual } 
 import { getDuration, getScrollingOptions, getScrollToItemOptions, getScrollToOptions } from './utils/scroll';
 
 // Export typescript types
-export type { Item, Options, ScrollToItemOptions, ScrollToOptions, Virtual } from './utils/interface';
+export { Item, Options, ScrollToItemOptions, ScrollToOptions, Virtual } from './utils/interface';
 
 /**
  * @function useVirtual
