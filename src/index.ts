@@ -17,8 +17,9 @@ import { useLatestRef } from './hooks/useLatestRef';
 import { isEqual, isEqualState } from './utils/equal';
 import { removeStyles, setStyles } from './utils/styles';
 import { useResizeObserver } from './hooks/useResizeObserver';
+import { useIsoLayoutEffect } from './hooks/useIsoLayoutEffect';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { abortAnimationFrame, requestDeferFrame } from './utils/raf';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Item, Measure, Options, Rect, ScrollTo, ScrollToItem, State, Virtual } from './utils/interface';
 import { getDuration, getScrollingOptions, getScrollToItemOptions, getScrollToOptions } from './utils/scroll';
 
@@ -335,7 +336,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     }
   }, []);
 
-  useLayoutEffect(() => {
+  useIsoLayoutEffect(() => {
     isMountedRef.current = true;
 
     return () => {
@@ -343,7 +344,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     };
   }, []);
 
-  useLayoutEffect(() => {
+  useIsoLayoutEffect(() => {
     setStyles(frameRef.current, [
       ['margin', '0'],
       ['box-sizing', 'border-box']
@@ -352,7 +353,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     setStyles(viewportRef.current, [['padding', '0']]);
   }, []);
 
-  useLayoutEffect(() => {
+  useIsoLayoutEffect(() => {
     const paddingTop = 'padding-top';
     const paddingLeft = 'padding-left';
     const paddingRight = 'padding-right';
@@ -371,7 +372,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
   const [frameOffset, frameSize] = state.frame;
 
-  useLayoutEffect(() => {
+  useIsoLayoutEffect(() => {
     const { current: frame } = frameRef;
     const { size: sizeKey } = keysRef.current;
 
@@ -382,13 +383,13 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     }
   }, [horizontal, frameSize]);
 
-  useLayoutEffect(() => {
+  useIsoLayoutEffect(() => {
     const { offset: offsetKey } = keysRef.current;
 
     setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`]]);
   }, [horizontal, frameOffset]);
 
-  useLayoutEffect(() => {
+  useIsoLayoutEffect(() => {
     const { current: viewport } = viewportRef;
 
     if (viewport) {
