@@ -12,7 +12,7 @@ import { getInitialState } from './utils/state';
 import { getVirtualRange } from './utils/range';
 import { getScrollOffset } from './utils/offset';
 import { Events, useEvent } from './utils/events';
-import { abortAnimationFrame } from './utils/raf';
+import { abortAnimationFrame, requestDeferFrame } from './utils/raf';
 import { usePrevious } from './hooks/usePrevious';
 import { useLatestRef } from './hooks/useLatestRef';
 import { isEqual, isEqualState } from './utils/equal';
@@ -40,7 +40,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
     const { overscan } = options;
 
-    if (overscan !== overscan! >>> 0) {
+    if (overscan !== void 0 && overscan !== overscan! >>> 0) {
       throw new RangeError('options.overscan must be an integer not less than 0');
     }
   }
@@ -226,17 +226,17 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         if (callback) {
           // Delay 4 frames for painting completion
-          scrollToRafRef.current = requestAnimationFrame(() => {
-            scrollToRafRef.current = requestAnimationFrame(() => {
-              scrollToRafRef.current = requestAnimationFrame(() => {
-                scrollToRafRef.current = requestAnimationFrame(() => {
-                  if (isMountedRef.current) {
-                    callback();
-                  }
-                });
-              });
-            });
-          });
+          requestDeferFrame(
+            4,
+            () => {
+              if (isMountedRef.current) {
+                callback();
+              }
+            },
+            handle => {
+              scrollToRafRef.current = handle;
+            }
+          );
         }
       };
 
@@ -405,13 +405,17 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           scrollOffsetRef.current = scrollOffset;
 
           // Delay 2 frames for painting completion
-          scrollRafRef.current = requestAnimationFrame(() => {
-            scrollRafRef.current = requestAnimationFrame(() => {
+          requestDeferFrame(
+            2,
+            () => {
               scrollingRef.current = false;
 
               update(scrollOffsetRef.current, 0);
-            });
-          });
+            },
+            handle => {
+              scrollRafRef.current = handle;
+            }
+          );
         }
       };
 

@@ -14,8 +14,8 @@ export function requestDeferFrame(
   onHandleChange?: (handle: number) => void
 ): void {
   const handle = requestAnimationFrame(time => {
-    if (frames > 0) {
-      requestDeferFrame(frames - 1, callback, onHandleChange);
+    if (--frames > 0) {
+      requestDeferFrame(frames, callback, onHandleChange);
     } else {
       callback(time);
     }
