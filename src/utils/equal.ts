@@ -6,9 +6,10 @@ import { Item, State } from './interface';
 
 /**
  * @function isEqual
- * @param next
- * @param prev
- * @param keys
+ * @description 对比两个对象中指定属性
+ * @param next 新对象
+ * @param prev 旧对象
+ * @param keys 属性数组
  */
 export function isEqual<T>(next: T, prev: T, keys: (keyof T)[]): boolean {
   for (const key of keys) {
@@ -22,8 +23,9 @@ export function isEqual<T>(next: T, prev: T, keys: (keyof T)[]): boolean {
 
 /**
  * @function isEqualItem
- * @param next
- * @param prev
+ * @function 对比两个虚列表项是否相等
+ * @param next 新列表项
+ * @param prev 旧列表项
  */
 export function isEqualItem(next: Item, prev: Item): boolean {
   if (!isEqual(next, prev, ['index', 'start', 'size', 'end'])) {
@@ -39,8 +41,9 @@ export function isEqualItem(next: Item, prev: Item): boolean {
 
 /**
  * @function isEqualState
- * @param next
- * @param prev
+ * @description 对比两个状态是否相等
+ * @param next 新状态
+ * @param prev 旧状态
  */
 export function isEqualState(next: State, prev: State): boolean {
   if (!isEqual(prev.frame, next.frame, [0, 1])) {

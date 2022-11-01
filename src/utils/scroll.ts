@@ -24,10 +24,11 @@ export function easingDuration(distance: number): number {
 }
 
 /**
- * @function getScrolling
- * @param scrolling
+ * @function getScrollingOptions
+ * @description 获取滚动参数配置
+ * @param scrolling 原始滚动配置
  */
-export function getScrolling(scrolling?: Scrolling): Required<Scrolling> {
+export function getScrollingOptions(scrolling?: Scrolling): Required<Scrolling> {
   const { easing, duration } = scrolling || {};
 
   return {
@@ -38,8 +39,9 @@ export function getScrolling(scrolling?: Scrolling): Required<Scrolling> {
 
 /**
  * @function getDuration
- * @param duration
- * @param distance
+ * @function 获取滚动时长
+ * @param duration 原始滚动时长参数
+ * @param distance 滚动距离
  */
 export function getDuration(duration: Duration, distance: number): number {
   return isFunction(duration) ? duration(Math.abs(distance)) : duration;
@@ -47,7 +49,8 @@ export function getDuration(duration: Duration, distance: number): number {
 
 /**
  * @function getScrollToOptions
- * @param value
+ * @description 获取 scrollTo 方法参数
+ * @param value 原始参数
  */
 export function getScrollToOptions(value: number | ScrollToOptions): ScrollToOptions {
   return isNumber(value) ? { offset: value } : value;
@@ -55,7 +58,8 @@ export function getScrollToOptions(value: number | ScrollToOptions): ScrollToOpt
 
 /**
  * @function getScrollToItemOptions
- * @param value
+ * @description 获取 scrollToItem 方法参数
+ * @param value 原始参数
  */
 export function getScrollToItemOptions(value: number | ScrollToItemOptions): ScrollToItemOptions {
   return isNumber(value) ? { index: value } : value;

@@ -12,23 +12,23 @@ import { getInitialState } from './utils/state';
 import { getVirtualRange } from './utils/range';
 import { getScrollOffset } from './utils/offset';
 import { Events, useEvent } from './utils/events';
-import { abortAnimationFrame, requestDeferFrame } from './utils/raf';
 import { usePrevious } from './hooks/usePrevious';
 import { useLatestRef } from './hooks/useLatestRef';
 import { isEqual, isEqualState } from './utils/equal';
 import { removeStyles, setStyles } from './utils/styles';
 import { useResizeObserver } from './hooks/useResizeObserver';
+import { abortAnimationFrame, requestDeferFrame } from './utils/raf';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { getDuration, getScrolling, getScrollToItemOptions, getScrollToOptions } from './utils/scroll';
 import { Item, Measure, Options, Rect, ScrollTo, ScrollToItem, State, Virtual } from './utils/interface';
+import { getDuration, getScrollingOptions, getScrollToItemOptions, getScrollToOptions } from './utils/scroll';
 
 // Export typescript types
 export type { Item, Options, ScrollToItemOptions, ScrollToOptions, Virtual } from './utils/interface';
 
 /**
  * @function useVirtual
- * @param count
- * @param options
+ * @description [hook] 虚列表
+ * @param options 配置参数
  */
 export default function useVirtual<T extends HTMLElement, U extends HTMLElement>(options: Options): Virtual<T, U> {
   const { size, count, horizontal } = options;
@@ -245,7 +245,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           const start = now();
           const distance = offset - scrollOffset;
           const { current: options } = optionsRef;
-          const config = getScrolling(options.scrolling);
+          const config = getScrollingOptions(options.scrolling);
           const duration = getDuration(config.duration, Math.abs(distance));
 
           abortAnimationFrame(scrollToRafRef.current);

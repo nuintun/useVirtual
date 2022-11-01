@@ -4,8 +4,9 @@
 
 /**
  * @function setStyles
- * @param element
- * @param styles
+ * @description 设置元素样式
+ * @param element 目标元素
+ * @param styles 样式列表
  */
 export function setStyles(
   element: HTMLElement | null,
@@ -22,8 +23,9 @@ export function setStyles(
 
 /**
  * @function removeStyles
- * @param element
- * @param styles
+ * @description 移除元素样式
+ * @param element 目标元素
+ * @param styles 样式列表
  */
 export function removeStyles(element: HTMLElement | null, styles: string[]): void {
   if (element) {

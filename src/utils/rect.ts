@@ -6,8 +6,9 @@ import { Rect } from './interface';
 
 /**
  * @function getBoundingRect
- * @param entry
- * @param borderBox
+ * @function 标准化元素尺寸
+ * @param entry ResizeObserver 回调值
+ * @param contentBox  是否使用 contentBox 模式
  */
 export function getBoundingRect(entry: ResizeObserverEntry, contentBox?: boolean): Rect {
   const mapping: Record<string, boolean> = {
