@@ -20,7 +20,7 @@ export function easeInOutSine(time: number): number {
  * @param distance 缓动动画移动总距离
  */
 export function easingDuration(distance: number): number {
-  return Math.min(Math.max(distance * 0.075, 100), 500);
+  return Math.min(500, Math.max(100, distance * 0.075));
 }
 
 /**

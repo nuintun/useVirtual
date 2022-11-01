@@ -109,7 +109,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         const [start, end] = range;
         const { overscan = 10 } = options;
         const maxIndex = measures.length - 1;
-        const startIndex = Math.max(start - overscan, 0);
+        const startIndex = Math.max(0, start - overscan);
         const endIndex = Math.min(end + overscan, maxIndex);
 
         anchorIndexRef.current = start;
@@ -253,7 +253,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
           const scroll = (): void => {
             if (isMountedRef.current) {
-              const time = Math.min((now() - start) / duration, 1);
+              const time = Math.min(1, (now() - start) / duration);
 
               scrollToOffset(config.easing(time) * distance + scrollOffset);
 
@@ -458,7 +458,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     const maxIndex = Math.max(0, count - 1);
     const { current: anchor } = anchorIndexRef;
 
-    anchorIndexRef.current = Math.min(maxIndex, anchor);
+    anchorIndexRef.current = Math.min(anchor, maxIndex);
   }, [count, size]);
 
   useEffect(() => {
