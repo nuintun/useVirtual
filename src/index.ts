@@ -378,7 +378,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
-    } else if (scrollingRef.current) {
+    } else if (optionsRef.current.scrollbar && scrollingRef.current) {
       // 滚动中延迟 6 帧，防止滚动条跳变
       requestDeferFrame(
         6,
