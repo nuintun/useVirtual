@@ -48,7 +48,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
   const frameRef = useRef<U>(null);
   const scrollOffsetRef = useRef(0);
-  const scrollToRef = useRef(false);
   const isMountedRef = useRef(false);
   const scrollingRef = useRef(false);
   const observe = useResizeObserver();
@@ -228,8 +227,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     if (isMountedRef.current) {
       remeasure();
 
-      scrollToRef.current = true;
-
       const config = getScrollToOptions(value);
       const viewportSize = viewportRectRef.current[keysRef.current.size];
       const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
@@ -241,8 +238,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
             3,
             () => {
               if (isMountedRef.current) {
-                scrollToRef.current = false;
-
                 callback();
               }
             },
