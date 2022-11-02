@@ -16,17 +16,16 @@ export interface Vertical {
   readonly scrollOffset: 'scrollTop';
 }
 
-export const Keys: [vertical: Vertical, horizontal: Horizontal] = [
-  {
-    size: 'height',
-    scrollTo: 'top',
-    offset: 'padding-top',
-    scrollOffset: 'scrollTop'
-  },
-  {
-    size: 'width',
-    scrollTo: 'left',
-    offset: 'padding-left',
-    scrollOffset: 'scrollLeft'
-  }
-];
+export const VERTICAL_KEYS: Vertical = {
+  size: 'height',
+  scrollTo: 'top',
+  offset: 'padding-top',
+  scrollOffset: 'scrollTop'
+};
+
+export const HORIZONTAL_KEYS: Horizontal = {
+  size: 'width',
+  scrollTo: 'left',
+  offset: 'padding-left',
+  scrollOffset: 'scrollLeft'
+};

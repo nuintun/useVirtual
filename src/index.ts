@@ -3,7 +3,6 @@
  */
 
 import { now } from './utils/now';
-import { Keys } from './utils/keys';
 import { Align } from './utils/align';
 import { getSize } from './utils/size';
 import { setMeasure } from './utils/measure';
@@ -16,6 +15,7 @@ import { usePrevious } from './hooks/usePrevious';
 import { useLatestRef } from './hooks/useLatestRef';
 import { isEqual, isEqualState } from './utils/equal';
 import { removeStyles, setStyles } from './utils/styles';
+import { HORIZONTAL_KEYS, VERTICAL_KEYS } from './utils/keys';
 import { useResizeObserver } from './hooks/useResizeObserver';
 import { useIsoLayoutEffect } from './hooks/useIsoLayoutEffect';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -61,9 +61,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const scrollingRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
   const prevSize = usePrevious(options.size);
-  const keysRef = useLatestRef(Keys[horizontal ? 1 : 0]);
   const [state, setState] = useState<State>(getInitialState);
   const viewportRectRef = useRef<Rect>({ width: 0, height: 0 });
+  const keysRef = useLatestRef(horizontal ? HORIZONTAL_KEYS : VERTICAL_KEYS);
 
   const scrollToOffset = useCallback((offset: number): void => {
     viewportRef.current?.scrollTo({
