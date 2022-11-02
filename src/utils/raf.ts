@@ -3,20 +3,20 @@
  */
 
 /**
- * @function requestDeferFrame
+ * @function requestDeferAnimationFrame
  * @description 延迟指定帧数后回调函数
  * @param frames 延迟帧数
  * @param callback 回调函数
  * @param onHandleChange 帧句柄
  */
-export function requestDeferFrame(
+export function requestDeferAnimationFrame(
   frames: number,
   callback: FrameRequestCallback,
   onHandleChange?: (handle: number) => void
 ): void {
   const handle = requestAnimationFrame(time => {
     if (--frames > 0) {
-      requestDeferFrame(frames, callback, onHandleChange);
+      requestDeferAnimationFrame(frames, callback, onHandleChange);
     } else {
       callback(time);
     }

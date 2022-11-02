@@ -19,7 +19,7 @@ import { removeStyles, setStyles } from './utils/styles';
 import { useResizeObserver } from './hooks/useResizeObserver';
 import { useIsoLayoutEffect } from './hooks/useIsoLayoutEffect';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { abortAnimationFrame, requestDeferFrame } from './utils/raf';
+import { abortAnimationFrame, requestDeferAnimationFrame } from './utils/raf';
 import { Item, Measure, Options, Rect, ScrollTo, ScrollToItem, State, Virtual } from './utils/interface';
 import { getDuration, getScrollingOptions, getScrollToItemOptions, getScrollToOptions } from './utils/scroll';
 
@@ -225,7 +225,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       const onComplete = () => {
         if (callback) {
           // 延迟 3 帧等待绘制完成
-          requestDeferFrame(
+          requestDeferAnimationFrame(
             3,
             () => {
               if (isMountedRef.current) {
@@ -380,7 +380,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       removeStyles(frame, [sizeKey]);
     } else if (scrollingRef.current && optionsRef.current.scrollbar !== false) {
       // 滚动中延迟 6 帧，防止滚动条跳变
-      requestDeferFrame(
+      requestDeferAnimationFrame(
         6,
         () => {
           setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
@@ -417,7 +417,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           scrollOffsetRef.current = scrollOffset;
 
           // 延迟 2 帧等待绘制完成
-          requestDeferFrame(
+          requestDeferAnimationFrame(
             2,
             () => {
               scrollingRef.current = false;
