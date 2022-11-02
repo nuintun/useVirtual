@@ -54,10 +54,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const observe = useResizeObserver();
   const viewportRef = useRef<T>(null);
   const remeasureIndexRef = useRef(-1);
-  const scrollRafRef = useRef<number>();
   const scrollToRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
+  const frameSizeRafRef = useRef<number>();
   const optionsRef = useLatestRef(options);
+  const scrollingRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
   const prevSize = usePrevious(options.size);
   const keysRef = useLatestRef(Keys[horizontal ? 1 : 0]);
@@ -148,8 +149,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                         remeasureIndexRef.current = Math.min(index, remeasureIndex);
                       }
 
-                      // To prevent dynamic size from jumping during backward scrolling
-                      if (!scrollToRef.current && index <= anchorIndexRef.current && start < scrollOffset) {
+                      // 非调用接口滚动中可视区域以上高度变化时重新定向滚动位置，防止视野跳动
+                      if (start < scrollOffset && !scrollToRef.current) {
                         scrollToOffset(scrollOffset + nextSize - size);
                       } else if (!scrollingRef.current) {
                         update(scrollOffset, Events.onReachEnd);
@@ -226,7 +227,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         scrollToRef.current = false;
 
         if (callback) {
-          // Delay 4 frames for painting completion
+          // 延迟 4 帧等待绘制完成
           requestDeferFrame(
             4,
             () => {
@@ -376,10 +377,21 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     const { current: frame } = frameRef;
     const { size: sizeKey } = keysRef.current;
 
+    abortAnimationFrame(frameSizeRafRef.current);
+
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
     } else {
-      setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
+      // 滚动中延迟 6 帧，防止滚动条跳变，其它情况延迟 1 帧
+      requestDeferFrame(
+        scrollOffsetRef.current ? 6 : 1,
+        () => {
+          setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
+        },
+        handle => {
+          frameSizeRafRef.current = handle;
+        }
+      );
     }
   }, [horizontal, frameSize]);
 
@@ -395,7 +407,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     if (viewport) {
       const onScrollChange = () => {
         if (isMountedRef.current && viewport) {
-          abortAnimationFrame(scrollRafRef.current);
+          abortAnimationFrame(scrollingRafRef.current);
 
           scrollingRef.current = true;
 
@@ -405,7 +417,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
           scrollOffsetRef.current = scrollOffset;
 
-          // Delay 2 frames for painting completion
+          // 延迟 2 帧等待绘制完成
           requestDeferFrame(
             2,
             () => {
@@ -414,7 +426,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
               update(scrollOffsetRef.current, 0);
             },
             handle => {
-              scrollRafRef.current = handle;
+              scrollingRafRef.current = handle;
             }
           );
         }
