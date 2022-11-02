@@ -378,18 +378,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
-    } else if (scrollingRef.current && optionsRef.current.scrollbar !== false) {
-      // 滚动中延迟 6 帧，防止滚动条跳变
-      requestDeferAnimationFrame(
-        6,
-        () => {
-          setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
-        },
-        handle => {
-          frameSizeRafRef.current = handle;
-        }
-      );
-    } else {
+    } else if (!scrollingRef.current || optionsRef.current.scrollbar === false) {
+      // 非滚动或者非优化滚动条滚动体验时直接更新滚动高度
       setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
     }
   }, [horizontal, frameSize]);
@@ -416,9 +406,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
           scrollOffsetRef.current = scrollOffset;
 
-          // 延迟 2 帧等待绘制完成
+          // 延迟 3 帧等待绘制完成
           requestDeferAnimationFrame(
-            2,
+            3,
             () => {
               scrollingRef.current = false;
 
