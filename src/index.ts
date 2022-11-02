@@ -405,7 +405,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
     if (viewport) {
       const onScrollChange = () => {
-        if (isMountedRef.current && viewport) {
+        if (isMountedRef.current) {
           abortAnimationFrame(scrollingRafRef.current);
 
           scrollingRef.current = true;
