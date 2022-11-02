@@ -32,7 +32,7 @@ export type { Item, Options, ScrollToItemOptions, ScrollToOptions, Virtual } fro
  * @param options 配置参数
  */
 export default function useVirtual<T extends HTMLElement, U extends HTMLElement>(options: Options): Virtual<T, U> {
-  const { size, count, horizontal } = options;
+  const { size, count, scrollbar, horizontal } = options;
 
   if (__DEV__) {
     if (count !== count >>> 0) {
@@ -392,13 +392,13 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     } else {
       setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
     }
-  }, [horizontal, frameSize]);
+  }, [frameSize, scrollbar, horizontal]);
 
   useIsoLayoutEffect(() => {
     const { offset: offsetKey } = keysRef.current;
 
     setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`]]);
-  }, [horizontal, frameOffset]);
+  }, [frameOffset, horizontal]);
 
   useIsoLayoutEffect(() => {
     const { current: viewport } = viewportRef;
