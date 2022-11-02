@@ -164,14 +164,16 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
 
-        dispatch(({ frame: [, prevFrameSize] }) => {
+        dispatch(({ frame: [, frameSize] }) => {
           const { scrollbar } = optionsRef.current;
+          const { current: scrolling } = scrollingRef;
+          const { end: nextFrameSize } = measures[maxIndex];
 
           return {
             items,
             frame: [
               measures[startIndex].start,
-              scrollingRef.current && scrollbar !== false ? prevFrameSize : measures[maxIndex].end
+              scrolling && scrollbar !== false ? Math.min(frameSize, nextFrameSize) : nextFrameSize
             ]
           };
         });
