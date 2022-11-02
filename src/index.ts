@@ -32,7 +32,7 @@ export type { Item, Options, ScrollToItemOptions, ScrollToOptions, Virtual } fro
  * @param options 配置参数
  */
 export default function useVirtual<T extends HTMLElement, U extends HTMLElement>(options: Options): Virtual<T, U> {
-  const { size, count, scrollbar, horizontal } = options;
+  const { size, count, horizontal } = options;
 
   if (__DEV__) {
     if (count !== count >>> 0) {
@@ -56,7 +56,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const remeasureIndexRef = useRef(-1);
   const scrollToRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
-  const frameSizeRafRef = useRef<number>();
   const optionsRef = useLatestRef(options);
   const scrollingRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
@@ -69,12 +68,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     viewportRef.current?.scrollTo({
       behavior: 'auto',
       [keysRef.current.scrollTo]: offset
-    });
-  }, []);
-
-  const stateUpdate = useCallback((state: State): void => {
-    setState(prevState => {
-      return isEqualState(state, prevState) ? prevState : state;
     });
   }, []);
 
@@ -91,6 +84,14 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
       remeasureIndexRef.current = -1;
     }
+  }, []);
+
+  const dispatch = useCallback((action: (prevState: State) => State): void => {
+    setState(prevState => {
+      const nextState = action(prevState);
+
+      return isEqualState(nextState, prevState) ? prevState : nextState;
+    });
   }, []);
 
   const update = useCallback((scrollOffset: number, events: number): void => {
@@ -164,9 +165,16 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
 
-        stateUpdate({
-          items,
-          frame: [measures[startIndex].start, measures[maxIndex].end]
+        dispatch(({ frame: [, prevFrameSize] }) => {
+          const { scrollbar } = optionsRef.current;
+
+          return {
+            items,
+            frame: [
+              measures[startIndex].start,
+              scrollingRef.current && scrollbar !== false ? prevFrameSize : measures[maxIndex].end
+            ]
+          };
         });
 
         if (useEvent(events, Events.onResize)) {
@@ -191,9 +199,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
       } else {
-        stateUpdate({
-          items: [],
-          frame: [0, -1]
+        dispatch(() => {
+          return {
+            items: [],
+            frame: [0, -1]
+          };
         });
 
         if (useEvent(events, Events.onResize)) {
@@ -371,28 +381,15 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const [frameOffset, frameSize] = state.frame;
 
   useIsoLayoutEffect(() => {
-    abortAnimationFrame(frameSizeRafRef.current);
-
     const { current: frame } = frameRef;
     const { size: sizeKey } = keysRef.current;
 
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
-    } else if (scrollbar !== false && scrollingRef.current) {
-      // 优化滚动条滚动体验下滚动时延迟更新滚动高度
-      requestDeferAnimationFrame(
-        3,
-        () => {
-          setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
-        },
-        handle => {
-          frameSizeRafRef.current = handle;
-        }
-      );
     } else {
       setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
     }
-  }, [frameSize, scrollbar, horizontal]);
+  }, [frameSize, horizontal]);
 
   useIsoLayoutEffect(() => {
     const { offset: offsetKey } = keysRef.current;
