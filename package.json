@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "😎 ♻️ A tiny React hook for rendering large datasets like a breeze.",
   "type": "module",
+  "sideEffects": false,
   "main": "cjs/index.cjs",
   "module": "esm/index.js",
   "types": "types/index.d.ts",
@@ -33,7 +34,6 @@
   "keywords": [
     "virtual"
   ],
-  "sideEffects": false,
   "author": {
     "name": "nuintun",
     "email": "nuintun@qq.com"
