@@ -219,19 +219,18 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       scrollToRef.current = true;
 
       const config = getScrollToOptions(value);
-      const { current: scrollOffset } = scrollOffsetRef;
       const viewportSize = viewportRectRef.current[keysRef.current.size];
       const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
 
       const onComplete = () => {
-        scrollToRef.current = false;
-
         if (callback) {
           // 延迟 4 帧等待绘制完成
           requestDeferFrame(
-            4,
+            3,
             () => {
               if (isMountedRef.current) {
+                scrollToRef.current = false;
+
                 callback();
               }
             },
@@ -242,37 +241,35 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         }
       };
 
-      if (offset !== scrollOffset) {
-        if (config.smooth) {
-          const start = now();
-          const distance = offset - scrollOffset;
-          const { current: options } = optionsRef;
-          const config = getScrollingOptions(options.scrolling);
-          const duration = getDuration(config.duration, Math.abs(distance));
+      if (config.smooth) {
+        const start = now();
+        const { current: options } = optionsRef;
+        const { current: scrollOffset } = scrollOffsetRef;
+        const config = getScrollingOptions(options.scrolling);
 
-          abortAnimationFrame(scrollToRafRef.current);
+        const distance = offset - scrollOffset;
+        const duration = getDuration(config.duration, Math.abs(distance));
 
-          const scroll = (): void => {
-            if (isMountedRef.current) {
-              const time = Math.min(1, (now() - start) / duration);
+        abortAnimationFrame(scrollToRafRef.current);
 
-              scrollToOffset(config.easing(time) * distance + scrollOffset);
+        const scroll = (): void => {
+          if (isMountedRef.current) {
+            const time = Math.min(1, (now() - start) / duration);
 
-              if (time < 1) {
-                scrollToRafRef.current = requestAnimationFrame(scroll);
-              } else {
-                onComplete();
-              }
+            scrollToOffset(config.easing(time) * distance + scrollOffset);
+
+            if (time < 1) {
+              scrollToRafRef.current = requestAnimationFrame(scroll);
+            } else {
+              onComplete();
             }
-          };
+          }
+        };
 
-          scrollToRafRef.current = requestAnimationFrame(scroll);
-        } else {
-          scrollToOffset(offset);
-
-          onComplete();
-        }
+        scrollToRafRef.current = requestAnimationFrame(scroll);
       } else {
+        scrollToOffset(offset);
+
         onComplete();
       }
     }
@@ -381,10 +378,10 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
-    } else {
-      // 滚动中延迟 6 帧，防止滚动条跳变，其它情况延迟 1 帧
+    } else if (scrollingRef.current) {
+      // 滚动中延迟 6 帧，防止滚动条跳变
       requestDeferFrame(
-        scrollOffsetRef.current ? 6 : 1,
+        6,
         () => {
           setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
         },
@@ -392,6 +389,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           frameSizeRafRef.current = handle;
         }
       );
+    } else {
+      setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
     }
   }, [horizontal, frameSize]);
 
