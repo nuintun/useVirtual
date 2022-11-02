@@ -378,8 +378,18 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
-    } else if (!scrollingRef.current || optionsRef.current.scrollbar === false) {
+    } else if (optionsRef.current.scrollbar !== false && scrollingRef.current) {
       // 非滚动或者非优化滚动条滚动体验时直接更新滚动高度
+      requestDeferAnimationFrame(
+        3,
+        () => {
+          setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
+        },
+        handle => {
+          frameSizeRafRef.current = handle;
+        }
+      );
+    } else {
       setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
     }
   }, [horizontal, frameSize]);
