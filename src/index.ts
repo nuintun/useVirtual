@@ -213,6 +213,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   }, []);
 
   const scrollTo = useCallback<ScrollTo>((value, callback) => {
+    abortAnimationFrame(scrollToRafRef.current);
+
     if (isMountedRef.current) {
       remeasure();
 
@@ -249,8 +251,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         const distance = offset - scrollOffset;
         const duration = getDuration(config.duration, Math.abs(distance));
-
-        abortAnimationFrame(scrollToRafRef.current);
 
         const scroll = (): void => {
           if (isMountedRef.current) {
@@ -371,10 +371,10 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const [frameOffset, frameSize] = state.frame;
 
   useIsoLayoutEffect(() => {
+    abortAnimationFrame(frameSizeRafRef.current);
+
     const { current: frame } = frameRef;
     const { size: sizeKey } = keysRef.current;
-
-    abortAnimationFrame(frameSizeRafRef.current);
 
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
@@ -405,9 +405,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
     if (viewport) {
       const onScrollChange = () => {
-        if (isMountedRef.current) {
-          abortAnimationFrame(scrollingRafRef.current);
+        abortAnimationFrame(scrollingRafRef.current);
 
+        if (isMountedRef.current) {
           scrollingRef.current = true;
 
           const scrollOffset = viewport[keysRef.current.scrollOffset];
