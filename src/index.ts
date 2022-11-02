@@ -224,7 +224,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
       const onComplete = () => {
         if (callback) {
-          // 延迟 4 帧等待绘制完成
+          // 延迟 3 帧等待绘制完成
           requestDeferFrame(
             3,
             () => {
