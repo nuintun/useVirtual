@@ -150,8 +150,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                         remeasureIndexRef.current = Math.min(index, remeasureIndex);
                       }
 
-                      // 非调用接口滚动中可视区域以上高度变化时重新定向滚动位置，防止视野跳动
-                      if (start < scrollOffset && !scrollToRef.current) {
+                      // 可视区域以上元素高度变化时重新定向滚动位置，防止视野跳动
+                      if (start < scrollOffset) {
                         scrollToOffset(scrollOffset + nextSize - size);
                       } else if (!scrollingRef.current) {
                         update(scrollOffset, Events.onReachEnd);
