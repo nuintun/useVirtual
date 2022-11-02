@@ -379,7 +379,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
     } else if (optionsRef.current.scrollbar !== false && scrollingRef.current) {
-      // 非滚动或者非优化滚动条滚动体验时直接更新滚动高度
+      // 优化滚动条滚动体验下滚动时延迟更新滚动高度
       requestDeferAnimationFrame(
         3,
         () => {
@@ -416,7 +416,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
           scrollOffsetRef.current = scrollOffset;
 
-          // 延迟 3 帧等待绘制完成
+          // 延迟 3 帧更新滚动状态并重新触发一次更新同步状态
           requestDeferAnimationFrame(
             3,
             () => {
