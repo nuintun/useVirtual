@@ -293,39 +293,41 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       const { index, align, smooth } = getScrollToItemOptions(value);
 
       const getOffset = (index: number): number => {
-        remeasure();
+        if (isMountedRef.current) {
+          remeasure();
 
-        const { current: measures } = measuresRef;
-        const maxIndex = measures.length - 1;
+          const { current: measures } = measuresRef;
+          const maxIndex = measures.length - 1;
 
-        if (maxIndex >= 0) {
-          index = Math.max(0, Math.min(index, maxIndex));
+          if (maxIndex >= 0) {
+            index = Math.max(0, Math.min(index, maxIndex));
 
-          const { start, size, end } = measures[index];
-          const viewport = viewportRectRef.current[keysRef.current.size];
+            const { start, size, end } = measures[index];
+            const viewport = viewportRectRef.current[keysRef.current.size];
 
-          let { current: offset } = scrollOffsetRef;
+            let { current: offset } = scrollOffsetRef;
 
-          switch (align) {
-            case Align.start:
-              offset = start;
-              break;
-            case Align.center:
-              offset = start + size / 2 - viewport / 2;
-              break;
-            case Align.end:
-              offset = end - viewport;
-              break;
-            default:
-              if (end <= offset) {
+            switch (align) {
+              case Align.start:
                 offset = start;
-              } else if (start >= offset + viewport) {
+                break;
+              case Align.center:
+                offset = start + size / 2 - viewport / 2;
+                break;
+              case Align.end:
                 offset = end - viewport;
-              }
-              break;
-          }
+                break;
+              default:
+                if (end <= offset) {
+                  offset = start;
+                } else if (start >= offset + viewport) {
+                  offset = end - viewport;
+                }
+                break;
+            }
 
-          return Math.max(0, getScrollOffset(viewport, offset, measures));
+            return Math.max(0, getScrollOffset(viewport, offset, measures));
+          }
         }
 
         return -1;
@@ -404,16 +406,20 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     const { current: viewport } = viewportRef;
 
     if (viewport) {
-      const onScrollChange = () => {
-        abortAnimationFrame(scrollingRafRef.current);
+      const onScroll = () => {
+        const scrollOffset = viewport[keysRef.current.scrollOffset];
 
-        if (isMountedRef.current) {
+        // 防止非正确方向滚动时触发更新
+        if (scrollOffset !== scrollOffsetRef.current) {
           scrollingRef.current = true;
 
-          const scrollOffset = viewport[keysRef.current.scrollOffset];
+          // 取消前次滚动状态更新回调
+          abortAnimationFrame(scrollingRafRef.current);
 
+          // 更新可视区域
           update(scrollOffset, Events.onScroll | Events.onReachEnd);
 
+          // 缓存滚动位置
           scrollOffsetRef.current = scrollOffset;
 
           // 延迟 3 帧更新滚动状态并重新触发一次更新同步状态
@@ -441,12 +447,12 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         }
       });
 
-      viewport.addEventListener('scroll', onScrollChange, { passive: true });
+      viewport.addEventListener('scroll', onScroll, { passive: true });
 
       return () => {
         unobserve();
 
-        viewport.removeEventListener('scroll', onScrollChange);
+        viewport.removeEventListener('scroll', onScroll);
       };
     }
   }, []);
