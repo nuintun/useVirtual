@@ -131,13 +131,22 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                 element,
                 entry => {
                   const { current: frame } = frameRef;
-                  const { current: measures } = measuresRef;
 
                   if (frame && index < measures.length) {
                     const { start, size } = measures[index];
                     const nextSize = getBoundingRect(entry)[keysRef.current.size];
 
                     if (nextSize !== size && frame.contains(entry.target)) {
+                      if (__DEV__) {
+                        const { size } = optionsRef.current;
+                        const { current: viewport } = viewportRectRef;
+                        const initialValue = getSize(index, size, measures, viewport);
+
+                        if (nextSize < initialValue) {
+                          console.log(`size of virtual item %o cannot be less than initial size %o`, index, initialValue);
+                        }
+                      }
+
                       setMeasure(measures, index, nextSize);
 
                       const { current: scrollOffset } = scrollOffsetRef;
@@ -164,17 +173,14 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
 
-        dispatch(({ frame: [, frameSize] }) => {
-          const { scrollbar } = optionsRef.current;
-          const { current: scrolling } = scrollingRef;
-          const { end: nextFrameSize } = measures[maxIndex];
+        const frameSize = measures[maxIndex].end;
+        const frameOffset = measures[startIndex].start;
+        const scrollbar = scrollingRef.current && options.scrollbar !== false;
 
+        dispatch(({ frame: [, prevFrameSize] }) => {
           return {
             items,
-            frame: [
-              measures[startIndex].start,
-              scrolling && scrollbar !== false ? Math.min(frameSize, nextFrameSize) : nextFrameSize
-            ]
+            frame: [frameOffset, scrollbar ? prevFrameSize : frameSize]
           };
         });
 
