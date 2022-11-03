@@ -244,7 +244,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         if (callback) {
           // 延迟 3 帧等待绘制完成
           requestDeferAnimationFrame(
-            3,
+            6,
             () => {
               if (isMountedRef.current) {
                 callback();
@@ -433,9 +433,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           // 缓存滚动位置
           scrollOffsetRef.current = scrollOffset;
 
-          // 延迟 3 帧更新滚动状态并重新触发一次更新同步状态
+          // 延迟 2 帧更新滚动状态并重新触发一次更新同步状态
           requestDeferAnimationFrame(
-            3,
+            2,
             () => {
               scrollingRef.current = false;
 
