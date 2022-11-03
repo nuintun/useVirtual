@@ -46,6 +46,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     }
   }
 
+  const anchorIndexRef = useRef(0);
   const frameRef = useRef<U>(null);
   const scrollOffsetRef = useRef(0);
   const isMountedRef = useRef(false);
@@ -53,14 +54,13 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const observe = useResizeObserver();
   const viewportRef = useRef<T>(null);
   const remeasureIndexRef = useRef(-1);
-  const deferFrameSizeRef = useRef(false);
+  const useScrollbarRef = useRef(false);
   const scrollToRafRef = useRef<number>();
-  const anchorIndexRef = useRef<number>(0);
   const optionsRef = useLatestRef(options);
   const scrollingRafRef = useRef<number>();
   const measuresRef = useRef<Measure[]>([]);
   const prevSize = usePrevious(options.size);
-  const [state, setState] = useState<State>(getInitialState);
+  const [state, setState] = useState(getInitialState);
   const viewportRectRef = useRef<Rect>({ width: 0, height: 0 });
   const keysRef = useLatestRef(horizontal ? HORIZONTAL_KEYS : VERTICAL_KEYS);
 
@@ -176,7 +176,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         const frameSize = measures[maxIndex].end;
         const frameOffset = measures[startIndex].start;
-        const isDeferFrameSize = scrollingRef.current && deferFrameSizeRef.current;
+        const isDeferFrameSize = scrollingRef.current && useScrollbarRef.current;
 
         dispatch(({ frame: [, prevFrameSize] }) => {
           return {
@@ -236,15 +236,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     if (isMountedRef.current) {
       remeasure();
 
-      deferFrameSizeRef.current = true;
-
       const config = getScrollToOptions(value);
       const viewportSize = viewportRectRef.current[keysRef.current.size];
       const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
 
       const onComplete = () => {
-        deferFrameSizeRef.current = false;
-
         if (callback) {
           // 延迟 3 帧等待绘制完成
           requestDeferAnimationFrame(
@@ -453,7 +449,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       };
 
       const onMouseUp = () => {
-        deferFrameSizeRef.current = false;
+        useScrollbarRef.current = false;
       };
 
       // 检测用户是否使用滚动条滚动
@@ -463,7 +459,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         const client = horizontal ? viewport.clientHeight : viewport.clientWidth;
 
         if (offset > client) {
-          deferFrameSizeRef.current = true;
+          useScrollbarRef.current = true;
         }
       };
 
