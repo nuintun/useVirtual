@@ -53,6 +53,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const observe = useResizeObserver();
   const viewportRef = useRef<T>(null);
   const remeasureIndexRef = useRef(-1);
+  const deferFrameSizeRef = useRef(false);
   const scrollToRafRef = useRef<number>();
   const anchorIndexRef = useRef<number>(0);
   const optionsRef = useLatestRef(options);
@@ -175,12 +176,12 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         const frameSize = measures[maxIndex].end;
         const frameOffset = measures[startIndex].start;
-        const isUseScrollbar = scrollingRef.current && options.scrollbar !== false;
+        const isDeferFrameSize = scrollingRef.current && deferFrameSizeRef.current;
 
         dispatch(({ frame: [, prevFrameSize] }) => {
           return {
             items,
-            frame: [frameOffset, isUseScrollbar ? prevFrameSize : frameSize]
+            frame: [frameOffset, isDeferFrameSize ? prevFrameSize : frameSize]
           };
         });
 
@@ -235,11 +236,15 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     if (isMountedRef.current) {
       remeasure();
 
+      deferFrameSizeRef.current = true;
+
       const config = getScrollToOptions(value);
       const viewportSize = viewportRectRef.current[keysRef.current.size];
       const offset = getScrollOffset(viewportSize, config.offset, measuresRef.current);
 
       const onComplete = () => {
+        deferFrameSizeRef.current = false;
+
         if (callback) {
           // 延迟 3 帧等待绘制完成
           requestDeferAnimationFrame(
@@ -406,6 +411,16 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     const { current: viewport } = viewportRef;
 
     if (viewport) {
+      const unobserve = observe(viewport, entry => {
+        const viewport = getBoundingRect(entry, true);
+
+        if (!isEqual(viewport, viewportRectRef.current, ['width', 'height'])) {
+          viewportRectRef.current = viewport;
+
+          update(scrollOffsetRef.current, Events.onResize | Events.onReachEnd);
+        }
+      });
+
       const onScroll = () => {
         const scrollOffset = viewport[keysRef.current.scrollOffset];
 
@@ -437,22 +452,31 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         }
       };
 
-      const unobserve = observe(viewport, entry => {
-        const viewport = getBoundingRect(entry, true);
+      const onMouseUp = () => {
+        deferFrameSizeRef.current = false;
+      };
 
-        if (!isEqual(viewport, viewportRectRef.current, ['width', 'height'])) {
-          viewportRectRef.current = viewport;
+      // 检测用户是否使用滚动条滚动
+      const onMouseDown = (event: MouseEvent): void => {
+        const { horizontal } = optionsRef.current;
+        const offset = horizontal ? event.offsetY : event.offsetX;
+        const client = horizontal ? viewport.clientHeight : viewport.clientWidth;
 
-          update(scrollOffsetRef.current, Events.onResize | Events.onReachEnd);
+        if (offset > client) {
+          deferFrameSizeRef.current = true;
         }
-      });
+      };
 
       viewport.addEventListener('scroll', onScroll, { passive: true });
+      viewport.addEventListener('mouseup', onMouseUp, { passive: true });
+      viewport.addEventListener('mousedown', onMouseDown, { passive: true });
 
       return () => {
         unobserve();
 
         viewport.removeEventListener('scroll', onScroll);
+        viewport.removeEventListener('mouseup', onMouseUp);
+        viewport.removeEventListener('mousedown', onMouseDown);
       };
     }
   }, []);

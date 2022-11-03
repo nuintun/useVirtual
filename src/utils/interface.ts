@@ -88,7 +88,6 @@ export interface Options {
   readonly overscan?: number;
   readonly onResize?: OnResize;
   readonly onScroll?: OnScroll;
-  readonly scrollbar?: boolean;
   readonly horizontal?: boolean;
   readonly scrolling?: Scrolling;
   readonly onReachEnd?: onReachEnd;
