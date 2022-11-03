@@ -175,12 +175,12 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         const frameSize = measures[maxIndex].end;
         const frameOffset = measures[startIndex].start;
-        const scrollbar = scrollingRef.current && options.scrollbar !== false;
+        const isUseScrollbar = scrollingRef.current && options.scrollbar !== false;
 
         dispatch(({ frame: [, prevFrameSize] }) => {
           return {
             items,
-            frame: [frameOffset, scrollbar ? prevFrameSize : frameSize]
+            frame: [frameOffset, isUseScrollbar ? prevFrameSize : frameSize]
           };
         });
 
