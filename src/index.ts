@@ -176,13 +176,17 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         const frameSize = measures[maxIndex].end;
         const frameOffset = measures[startIndex].start;
-        const isDeferFrameSize = scrollingRef.current && useScrollbarRef.current;
+        const { current: useScrollbar } = useScrollbarRef;
 
         dispatch(({ frame: [, prevFrameSize] }) => {
-          return {
-            items,
-            frame: [frameOffset, isDeferFrameSize ? prevFrameSize : frameSize]
-          };
+          if (useScrollbar) {
+            const scrollSize = scrollOffset + viewportSize;
+            const usePrevSize = scrollSize < prevFrameSize && scrollSize < frameSize;
+
+            return { items, frame: [frameOffset, usePrevSize ? prevFrameSize : frameSize] };
+          }
+
+          return { items, frame: [frameOffset, frameSize] };
         });
 
         if (useEvent(events, Events.onResize)) {
@@ -207,12 +211,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
       } else {
-        dispatch(() => {
-          return {
-            items: [],
-            frame: [0, -1]
-          };
-        });
+        dispatch(() => ({ items: [], frame: [0, -1] }));
 
         if (useEvent(events, Events.onResize)) {
           options.onResize?.(viewport);
@@ -435,7 +434,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
           // 延迟 3 帧更新滚动状态并重新触发一次更新同步状态
           requestDeferAnimationFrame(
-            3,
+            2,
             () => {
               scrollingRef.current = false;
 
@@ -450,6 +449,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
       const onMouseUp = () => {
         useScrollbarRef.current = false;
+
+        update(scrollOffsetRef.current, 0);
       };
 
       // 检测用户是否使用滚动条滚动
