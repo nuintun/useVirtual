@@ -181,6 +181,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
             return { items, frame: [frameOffset, frameSize] };
           }
 
+          // 四舍五入，防止出现小数无法触底更新高度
           const scrollSize = (scrollOffset + viewportSize + 0.5) | 0;
           const usePrevSize = scrollSize < prevFrameSize && scrollSize < frameSize;
 
