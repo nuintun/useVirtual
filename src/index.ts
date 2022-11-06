@@ -54,7 +54,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const observe = useResizeObserver();
   const viewportRef = useRef<T>(null);
   const remeasureIndexRef = useRef(-1);
-  const useScrollbarRef = useRef(false);
   const scrollToRafRef = useRef<number>();
   const optionsRef = useLatestRef(options);
   const scrollingRafRef = useRef<number>();
@@ -176,17 +175,16 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         const frameSize = measures[maxIndex].end;
         const frameOffset = measures[startIndex].start;
-        const { current: useScrollbar } = useScrollbarRef;
 
         dispatch(({ frame: [, prevFrameSize] }) => {
-          if (useScrollbar) {
-            const scrollSize = scrollOffset + viewportSize;
-            const usePrevSize = scrollSize < prevFrameSize && scrollSize < frameSize;
-
-            return { items, frame: [frameOffset, usePrevSize ? prevFrameSize : frameSize] };
+          if (options.scrollbar === false) {
+            return { items, frame: [frameOffset, frameSize] };
           }
 
-          return { items, frame: [frameOffset, frameSize] };
+          const scrollSize = (scrollOffset + viewportSize + 0.5) | 0;
+          const usePrevSize = scrollSize < prevFrameSize && scrollSize < frameSize;
+
+          return { items, frame: [frameOffset, usePrevSize ? prevFrameSize : frameSize] };
         });
 
         if (useEvent(events, Events.onResize)) {
@@ -447,33 +445,12 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         }
       };
 
-      const onMouseUp = () => {
-        useScrollbarRef.current = false;
-
-        update(scrollOffsetRef.current, 0);
-      };
-
-      // 检测用户是否使用滚动条滚动
-      const onMouseDown = (event: MouseEvent): void => {
-        const { horizontal } = optionsRef.current;
-        const offset = horizontal ? event.offsetY : event.offsetX;
-        const client = horizontal ? viewport.clientHeight : viewport.clientWidth;
-
-        if (offset > client) {
-          useScrollbarRef.current = true;
-        }
-      };
-
       viewport.addEventListener('scroll', onScroll, { passive: true });
-      viewport.addEventListener('mouseup', onMouseUp, { passive: true });
-      viewport.addEventListener('mousedown', onMouseDown, { passive: true });
 
       return () => {
         unobserve();
 
         viewport.removeEventListener('scroll', onScroll);
-        viewport.removeEventListener('mouseup', onMouseUp);
-        viewport.removeEventListener('mousedown', onMouseDown);
       };
     }
   }, []);
