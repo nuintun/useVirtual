@@ -143,7 +143,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                         const initialValue = getSize(index, size, measures, viewport);
 
                         if (nextSize < initialValue) {
-                          console.warn(`size of virtual item %o cannot be less than initial size %o`, index, initialValue);
+                          const message = 'size %o of virtual item %o cannot be less than initial size %o';
+
+                          console.error(message, nextSize, index, initialValue);
                         }
                       }
 
