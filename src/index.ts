@@ -164,7 +164,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                       if (start < scrollOffset) {
                         scrollToOffset(scrollOffset + nextSize - size);
                       } else if (!scrollingRef.current) {
-                        update(scrollOffset, Events.onReachEnd);
+                        update(scrollOffset, Events.ReachEnd);
                       }
                     }
                   }
@@ -190,11 +190,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           return { items, frame: [frameOffset, usePrevSize ? prevFrameSize : frameSize] };
         });
 
-        if (useEvent(events, Events.onResize)) {
+        if (useEvent(events, Events.Resize)) {
           options.onResize?.(viewport);
         }
 
-        if (useEvent(events, Events.onScroll)) {
+        if (useEvent(events, Events.Scroll)) {
           options.onScroll?.({
             offset,
             visible: [start, end],
@@ -203,7 +203,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
 
-        if (end >= maxIndex && useEvent(events, Events.onReachEnd)) {
+        if (end >= maxIndex && useEvent(events, Events.ReachEnd)) {
           options.onReachEnd?.({
             offset,
             index: end,
@@ -214,11 +214,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       } else {
         dispatch(() => ({ items: [], frame: [0, -1] }));
 
-        if (useEvent(events, Events.onResize)) {
+        if (useEvent(events, Events.Resize)) {
           options.onResize?.(viewport);
         }
 
-        if (viewportSize > 0 && useEvent(events, Events.onReachEnd)) {
+        if (viewportSize > 0 && useEvent(events, Events.ReachEnd)) {
           options.onReachEnd?.({
             offset,
             index: -1,
@@ -413,7 +413,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         if (!isEqual(viewport, viewportRectRef.current, ['width', 'height'])) {
           viewportRectRef.current = viewport;
 
-          update(scrollOffsetRef.current, Events.onResize | Events.onReachEnd);
+          update(scrollOffsetRef.current, Events.Resize | Events.ReachEnd);
         }
       });
 
@@ -428,7 +428,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           abortAnimationFrame(scrollingRafRef.current);
 
           // 更新可视区域
-          update(scrollOffset, Events.onScroll | Events.onReachEnd);
+          update(scrollOffset, Events.Scroll | Events.ReachEnd);
 
           // 缓存滚动位置
           scrollOffsetRef.current = scrollOffset;
@@ -439,7 +439,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
             () => {
               scrollingRef.current = false;
 
-              update(scrollOffsetRef.current, 0);
+              update(scrollOffsetRef.current, Events.None);
             },
             handle => {
               scrollingRafRef.current = handle;
@@ -480,7 +480,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   }, [count, size]);
 
   useEffect(() => {
-    update(scrollOffsetRef.current, Events.onReachEnd);
+    update(scrollOffsetRef.current, Events.ReachEnd);
   }, [count, size, horizontal]);
 
   return [state.items, viewportRef, frameRef, { scrollTo, scrollToItem }];

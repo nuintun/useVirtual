@@ -2,11 +2,12 @@
  * @module events
  */
 
-// 时间标识
+// 事件标识
 export const enum Events {
-  onResize = 1 << 0,
-  onScroll = 1 << 1,
-  onReachEnd = 1 << 2
+  None = 0,
+  Resize = 1 << 0,
+  Scroll = 1 << 1,
+  ReachEnd = 1 << 2
 }
 
 /**
