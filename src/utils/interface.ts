@@ -2,6 +2,7 @@
  * @module interface
  */
 
+import { Align } from './align';
 import { RefObject } from 'react';
 
 export type Easing = (time: number) => number;
@@ -107,7 +108,7 @@ export interface ScrollTo {
 export interface ScrollToItemOptions {
   readonly index: number;
   readonly smooth?: boolean;
-  readonly align?: 'auto' | 'start' | 'center' | 'end';
+  readonly align?: `${Align}`;
 }
 
 export interface ScrollToItem {
