@@ -309,13 +309,13 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
             let { current: offset } = scrollOffsetRef;
 
             switch (align) {
-              case Align.start:
+              case Align.Start:
                 offset = start;
                 break;
-              case Align.center:
+              case Align.Center:
                 offset = start + size / 2 - viewport / 2;
                 break;
-              case Align.end:
+              case Align.End:
                 offset = end - viewport;
                 break;
               default:

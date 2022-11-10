@@ -4,8 +4,8 @@
 
 // 滚动对齐方式
 export const enum Align {
-  end = 'end',
-  auto = 'auto',
-  start = 'start',
-  center = 'center'
+  Auto = 'auto',
+  Start = 'start',
+  Center = 'center',
+  End = 'end'
 }
