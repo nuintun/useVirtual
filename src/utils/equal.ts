@@ -22,24 +22,6 @@ export function isEqual<T>(next: T, prev: T, keys: (keyof T)[]): boolean {
 }
 
 /**
- * @function isEqualItem
- * @function 对比两个虚列表项是否相等
- * @param next 新列表项
- * @param prev 旧列表项
- */
-export function isEqualItem(next: Item, prev: Item): boolean {
-  if (!isEqual(next, prev, ['index', 'start', 'size', 'end'])) {
-    return false;
-  }
-
-  if (!isEqual(next.viewport, prev.viewport, ['width', 'height'])) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
  * @function isEqualState
  * @description 对比两个状态是否相等
  * @param next 新状态
@@ -58,8 +40,10 @@ export function isEqualState(next: State, prev: State): boolean {
     return false;
   }
 
+  const keys: (keyof Item)[] = ['index', 'start', 'size', 'end'];
+
   for (let index = length - 1; index >= 0; index--) {
-    if (!isEqualItem(nextItems[index], prevItems[index])) {
+    if (!isEqual(nextItems[index], prevItems[index], keys)) {
       return false;
     }
   }

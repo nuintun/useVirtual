@@ -7,9 +7,9 @@ import { RefObject } from 'react';
 
 export type Easing = (time: number) => number;
 
-export type VirtualRange = [start: number, end: number];
-
 export type Duration = number | ((distance: number) => number);
+
+export type VirtualRange = readonly [start: number, end: number];
 
 export type Size = number | ((index: number, viewport: Rect) => number);
 
@@ -38,13 +38,7 @@ export interface Item {
   readonly size: number;
   readonly index: number;
   readonly start: number;
-  readonly viewport: Rect;
   readonly observe: Observe;
-}
-
-export interface State {
-  readonly items: Item[];
-  readonly frame: [offset: number, size: number];
 }
 
 export interface Scrolling {
@@ -116,14 +110,19 @@ export interface ScrollToItem {
   (options: ScrollToItemOptions, callback?: () => void): void;
 }
 
-export interface Methods {
+export interface Api {
   readonly scrollTo: ScrollTo;
   readonly scrollToItem: ScrollToItem;
 }
 
-export type Virtual<T extends HTMLElement, U extends HTMLElement> = [
-  items: Item[],
+export interface State {
+  readonly items: readonly Item[];
+  readonly frame: readonly [offset: number, size: number];
+}
+
+export type Virtual<T extends HTMLElement, U extends HTMLElement> = readonly [
+  items: readonly Item[],
   viewportRef: RefObject<T>,
   frameRef: RefObject<U>,
-  methods: Methods
+  api: Api
 ];

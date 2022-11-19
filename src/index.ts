@@ -120,7 +120,6 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
           items.push({
             index,
-            viewport,
             end: measure.end,
             size: measure.size,
             start: measure.start,
