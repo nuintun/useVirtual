@@ -21,7 +21,6 @@ export interface Rect {
 export interface Measure {
   readonly end: number;
   readonly size: number;
-  readonly index: number;
   readonly start: number;
 }
 

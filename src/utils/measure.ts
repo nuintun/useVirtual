@@ -13,5 +13,5 @@ import { Measure } from './interface';
 export function setMeasure(measures: Measure[], index: number, size: number): void {
   const start = measures[index - 1]?.end || 0;
 
-  measures[index] = { index, start, size, end: start + size };
+  measures[index] = { start, size, end: start + size };
 }

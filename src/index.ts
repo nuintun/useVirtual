@@ -87,6 +87,13 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
   const dispatch = useCallback((action: (prevState: State) => State): void => {
     setState(prevState => {
+      if (__DEV__) {
+        const { items, frame } = action(prevState);
+        const nextState = { items: Object.freeze(items), frame };
+
+        return isEqualState(nextState, prevState) ? prevState : nextState;
+      }
+
       const nextState = action(prevState);
 
       return isEqualState(nextState, prevState) ? prevState : nextState;
@@ -117,8 +124,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
         for (let index = startIndex; index <= endIndex; index++) {
           const measure = measures[index];
-
-          items.push({
+          const item: Item = {
             index,
             end: measure.end,
             size: measure.size,
@@ -171,7 +177,9 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
                 { box: 'border-box' }
               );
             }
-          });
+          };
+
+          items.push(__DEV__ ? Object.freeze(item) : item);
         }
 
         const frameSize = measures[maxIndex].end;
