@@ -5,7 +5,7 @@
 import { useEffect, useLayoutEffect } from 'react';
 
 // 是否支持 DOM 操作
-const canUseDOM: boolean =
+const canUseDOM =
   typeof window !== 'undefined' &&
   typeof window.document !== 'undefined' &&
   typeof window.document.createElement !== 'undefined';
