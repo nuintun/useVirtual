@@ -16,17 +16,6 @@
     "esm",
     "types"
   ],
-  "scripts": {
-    "lint": "tsc --noEmit",
-    "clean": "node tools/clean.js",
-    "format": "prettier --write .",
-    "prepublishOnly": "npm run build",
-    "build:cjs": "rollup -c tools/rollup.cjs.js",
-    "build:esm": "rollup -c tools/rollup.esm.js",
-    "build": "npm run clean && npm run build:main && npm run format",
-    "build:main": "npm run build:cjs && npm run build:esm && npm run build:types",
-    "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nuintun/useVirtual.git"
@@ -41,6 +30,18 @@
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/nuintun/useVirtual/issues"
+  },
+  "homepage": "https://github.com/nuintun/useVirtual#readme",
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "clean": "node tools/clean.js",
+    "format": "prettier --write .",
+    "prepublishOnly": "npm run build",
+    "build:cjs": "rollup -c tools/rollup.cjs.js",
+    "build:esm": "rollup -c tools/rollup.esm.js",
+    "build": "npm run clean && npm run build:main && npm run format",
+    "build:main": "npm run build:cjs && npm run build:esm && npm run build:types",
+    "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types"
   },
   "dependencies": {
     "tslib": "^2.5.0"
@@ -57,6 +58,5 @@
   },
   "peerDependencies": {
     "react": ">=17.0.0"
-  },
-  "homepage": "https://github.com/nuintun/useVirtual#readme"
+  }
 }
