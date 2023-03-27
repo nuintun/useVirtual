@@ -10,7 +10,7 @@ import { getBoundingRect } from './utils/rect';
 import { getInitialState } from './utils/state';
 import { getVirtualRange } from './utils/range';
 import { getScrollOffset } from './utils/offset';
-import { Events, useEvent } from './utils/events';
+import { Events, hasEvent } from './utils/events';
 import { usePrevious } from './hooks/usePrevious';
 import { useLatestRef } from './hooks/useLatestRef';
 import { isEqual, isEqualState } from './utils/equal';
@@ -197,11 +197,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           return { items, frame: [frameOffset, usePrevSize ? prevFrameSize : frameSize] };
         });
 
-        if (useEvent(events, Events.Resize)) {
+        if (hasEvent(events, Events.Resize)) {
           options.onResize?.(viewport);
         }
 
-        if (useEvent(events, Events.Scroll)) {
+        if (hasEvent(events, Events.Scroll)) {
           options.onScroll?.({
             offset,
             visible: [start, end],
@@ -210,7 +210,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
 
-        if (end >= maxIndex && useEvent(events, Events.ReachEnd)) {
+        if (end >= maxIndex && hasEvent(events, Events.ReachEnd)) {
           options.onReachEnd?.({
             offset,
             index: end,
@@ -221,11 +221,11 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
       } else {
         dispatch(() => ({ items: [], frame: [0, -1] }));
 
-        if (useEvent(events, Events.Resize)) {
+        if (hasEvent(events, Events.Resize)) {
           options.onResize?.(viewport);
         }
 
-        if (viewportSize > 0 && useEvent(events, Events.ReachEnd)) {
+        if (viewportSize > 0 && hasEvent(events, Events.ReachEnd)) {
           options.onReachEnd?.({
             offset,
             index: -1,
