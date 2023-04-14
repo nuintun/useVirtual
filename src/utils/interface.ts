@@ -57,8 +57,8 @@ export interface OnResize {
 export interface ScrollEvent {
   readonly delta: number;
   readonly offset: number;
+  readonly items: VirtualRange;
   readonly visible: VirtualRange;
-  readonly overscan: VirtualRange;
 }
 
 export interface OnScroll {
@@ -68,8 +68,8 @@ export interface OnScroll {
 export interface ReachEndEvent {
   readonly index: number;
   readonly offset: number;
+  readonly items: VirtualRange;
   readonly visible: VirtualRange;
-  readonly overscan: VirtualRange;
 }
 
 export interface onReachEnd {

@@ -205,7 +205,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           options.onScroll?.({
             offset,
             visible: [start, end],
-            overscan: [startIndex, endIndex],
+            items: [startIndex, endIndex],
             delta: offset - scrollOffsetRef.current
           });
         }
@@ -215,7 +215,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
             offset,
             index: end,
             visible: [start, end],
-            overscan: [startIndex, endIndex]
+            items: [startIndex, endIndex]
           });
         }
       } else {
@@ -229,8 +229,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           options.onReachEnd?.({
             offset,
             index: -1,
-            visible: [-1, -1],
-            overscan: [-1, -1]
+            items: [-1, -1],
+            visible: [-1, -1]
           });
         }
       }
