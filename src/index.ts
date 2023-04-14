@@ -46,8 +46,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     }
   }
 
+  const listRef = useRef<U>(null);
   const anchorIndexRef = useRef(0);
-  const frameRef = useRef<U>(null);
   const scrollOffsetRef = useRef(0);
   const isMountedRef = useRef(false);
   const scrollingRef = useRef(false);
@@ -88,8 +88,8 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   const dispatch = useCallback((action: (prevState: State) => State): void => {
     setState(prevState => {
       if (__DEV__) {
-        const { items, frame } = action(prevState);
-        const nextState = { items: Object.freeze(items), frame };
+        const { items, list } = action(prevState);
+        const nextState = { items: Object.freeze(items), list };
 
         return isEqualState(nextState, prevState) ? prevState : nextState;
       }
@@ -135,13 +135,13 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
               return observe(
                 element,
                 entry => {
-                  const { current: frame } = frameRef;
+                  const { current: list } = listRef;
 
-                  if (frame && index < measures.length) {
+                  if (list && index < measures.length) {
                     const { start, size } = measures[index];
                     const nextSize = getBoundingRect(entry)[keysRef.current.size];
 
-                    if (nextSize !== size && frame.contains(entry.target)) {
+                    if (nextSize !== size && list.contains(entry.target)) {
                       if (__DEV__) {
                         const { size } = optionsRef.current;
                         const { current: viewport } = viewportRectRef;
@@ -182,19 +182,19 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           items.push(__DEV__ ? Object.freeze(item) : item);
         }
 
-        const frameSize = measures[maxIndex].end;
-        const frameOffset = measures[startIndex].start;
+        const listSize = measures[maxIndex].end;
+        const listOffset = measures[startIndex].start;
 
-        dispatch(({ frame: [, prevFrameSize] }) => {
+        dispatch(({ list: [, prevListSize] }) => {
           if (options.scrollbar === false) {
-            return { items, frame: [frameOffset, frameSize] };
+            return { items, list: [listOffset, listSize] };
           }
 
           // 四舍五入，防止出现小数无法触底更新高度
           const scrollSize = (scrollOffset + viewportSize + 0.5) | 0;
-          const usePrevSize = scrollSize < prevFrameSize && scrollSize < frameSize;
+          const usePrevSize = scrollSize < prevListSize && scrollSize < listSize;
 
-          return { items, frame: [frameOffset, usePrevSize ? prevFrameSize : frameSize] };
+          return { items, list: [listOffset, usePrevSize ? prevListSize : listSize] };
         });
 
         if (hasEvent(events, Events.Resize)) {
@@ -224,7 +224,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
           });
         }
       } else {
-        dispatch(() => ({ items: [], frame: [0, -1] }));
+        dispatch(() => ({ items: [], list: [0, -1] }));
 
         if (hasEvent(events, Events.Resize)) {
           options.onResize?.({
@@ -376,7 +376,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
   }, []);
 
   useIsoLayoutEffect(() => {
-    setStyles(frameRef.current, [
+    setStyles(listRef.current, [
       ['margin', '0'],
       ['box-sizing', 'border-box']
     ]);
@@ -390,35 +390,35 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     const paddingRight = 'padding-right';
     const paddingBottom = 'padding-bottom';
 
-    const { current: frame } = frameRef;
+    const { current: list } = listRef;
 
     if (horizontal) {
-      setStyles(frame, [[paddingRight, '0']]);
-      removeStyles(frame, ['height', paddingTop, paddingBottom]);
+      setStyles(list, [[paddingRight, '0']]);
+      removeStyles(list, ['height', paddingTop, paddingBottom]);
     } else {
-      setStyles(frame, [[paddingBottom, '0']]);
-      removeStyles(frame, ['width', paddingLeft, paddingRight]);
+      setStyles(list, [[paddingBottom, '0']]);
+      removeStyles(list, ['width', paddingLeft, paddingRight]);
     }
   }, [horizontal]);
 
-  const [frameOffset, frameSize] = state.frame;
+  const [listOffset, listSize] = state.list;
 
   useIsoLayoutEffect(() => {
-    const { current: frame } = frameRef;
+    const { current: list } = listRef;
     const { size: sizeKey } = keysRef.current;
 
-    if (frameSize < 0) {
-      removeStyles(frame, [sizeKey]);
+    if (listSize < 0) {
+      removeStyles(list, [sizeKey]);
     } else {
-      setStyles(frame, [[sizeKey, `${frameSize}px`]]);
+      setStyles(list, [[sizeKey, `${listSize}px`]]);
     }
-  }, [frameSize, horizontal]);
+  }, [listSize, horizontal]);
 
   useIsoLayoutEffect(() => {
     const { offset: offsetKey } = keysRef.current;
 
-    setStyles(frameRef.current, [[offsetKey, `${frameOffset}px`]]);
-  }, [frameOffset, horizontal]);
+    setStyles(listRef.current, [[offsetKey, `${listOffset}px`]]);
+  }, [listOffset, horizontal]);
 
   useIsoLayoutEffect(() => {
     const { current: viewport } = viewportRef;
@@ -500,5 +500,5 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     update(scrollOffsetRef.current, Events.ReachEnd);
   }, [count, size, horizontal]);
 
-  return [state.items, viewportRef, frameRef, { scrollTo, scrollToItem }];
+  return [viewportRef, listRef, state.items, { scrollTo, scrollToItem }];
 }

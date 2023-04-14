@@ -11,5 +11,5 @@ import { Item, State } from './interface';
 export function getInitialState(): State {
   const items: Item[] = [];
 
-  return { items: __DEV__ ? Object.freeze(items) : items, frame: [0, -1] };
+  return { items: __DEV__ ? Object.freeze(items) : items, list: [0, -1] };
 }

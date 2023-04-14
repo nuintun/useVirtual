@@ -118,12 +118,12 @@ export interface Api {
 
 export interface State {
   readonly items: readonly Item[];
-  readonly frame: readonly [offset: number, size: number];
+  readonly list: readonly [offset: number, size: number];
 }
 
 export type Virtual<T extends HTMLElement, U extends HTMLElement> = readonly [
-  items: readonly Item[],
   viewportRef: RefObject<T>,
-  frameRef: RefObject<U>,
+  listRef: RefObject<U>,
+  items: readonly Item[],
   api: Api
 ];
