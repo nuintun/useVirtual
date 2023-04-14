@@ -410,7 +410,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     if (frameSize < 0) {
       removeStyles(frame, [sizeKey]);
     } else {
-      setStyles(frameRef.current, [[sizeKey, `${frameSize}px`]]);
+      setStyles(frame, [[sizeKey, `${frameSize}px`]]);
     }
   }, [frameSize, horizontal]);
 
