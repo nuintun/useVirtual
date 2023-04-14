@@ -198,7 +198,12 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         });
 
         if (hasEvent(events, Events.Resize)) {
-          options.onResize?.(viewport);
+          options.onResize?.({
+            visible: [start, end],
+            width: viewport.width,
+            height: viewport.height,
+            items: [startIndex, endIndex]
+          });
         }
 
         if (hasEvent(events, Events.Scroll)) {
@@ -222,7 +227,12 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
         dispatch(() => ({ items: [], frame: [0, -1] }));
 
         if (hasEvent(events, Events.Resize)) {
-          options.onResize?.(viewport);
+          options.onResize?.({
+            items: [-1, -1],
+            visible: [-1, -1],
+            width: viewport.width,
+            height: viewport.height
+          });
         }
 
         if (viewportSize > 0 && hasEvent(events, Events.ReachEnd)) {

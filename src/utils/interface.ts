@@ -48,6 +48,8 @@ export interface Scrolling {
 export interface ResizeEvent {
   readonly width: number;
   readonly height: number;
+  readonly items: VirtualRange;
+  readonly visible: VirtualRange;
 }
 
 export interface OnResize {
