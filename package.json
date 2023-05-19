@@ -9,7 +9,8 @@
   "types": "types/index.d.ts",
   "exports": {
     "import": "./esm/index.js",
-    "require": "./cjs/index.cjs"
+    "require": "./cjs/index.cjs",
+    "types": "./types/index.d.ts"
   },
   "files": [
     "cjs",
@@ -44,16 +45,16 @@
     "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types"
   },
   "dependencies": {
-    "tslib": "^2.5.0"
+    "tslib": "^2.5.2"
   },
   "devDependencies": {
     "@rollup/plugin-replace": "^5.0.2",
-    "@rollup/plugin-typescript": "^11.1.0",
-    "@types/react": "^18.2.5",
+    "@rollup/plugin-typescript": "^11.1.1",
+    "@types/react": "^18.2.6",
     "magic-string": "^0.30.0",
     "prettier": "^2.8.8",
-    "rimraf": "^5.0.0",
-    "rollup": "^3.21.5",
+    "rimraf": "^5.0.1",
+    "rollup": "^3.22.0",
     "typescript": "^5.0.4"
   },
   "peerDependencies": {
