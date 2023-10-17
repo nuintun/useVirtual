@@ -48,13 +48,13 @@
     "tslib": "^2.6.2"
   },
   "devDependencies": {
-    "@rollup/plugin-replace": "^5.0.3",
+    "@rollup/plugin-replace": "^5.0.4",
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/react": "^18.2.28",
-    "magic-string": "^0.30.4",
+    "magic-string": "^0.30.5",
     "prettier": "^3.0.3",
     "rimraf": "^5.0.5",
-    "rollup": "^4.0.2",
+    "rollup": "^4.1.4",
     "tsc-alias": "^1.8.8",
     "typescript": "^5.2.2"
   },
