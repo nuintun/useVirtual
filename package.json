@@ -50,7 +50,7 @@
   "devDependencies": {
     "@rollup/plugin-replace": "^5.0.5",
     "@rollup/plugin-typescript": "^11.1.6",
-    "@types/react": "^18.2.57",
+    "@types/react": "^18.2.58",
     "magic-string": "^0.30.7",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
