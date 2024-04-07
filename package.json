@@ -51,12 +51,12 @@
     "@rollup/plugin-replace": "^5.0.5",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/react": "^18.2.74",
-    "magic-string": "^0.30.8",
+    "magic-string": "^0.30.9",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
     "rollup": "^4.14.0",
     "tsc-alias": "^1.8.8",
-    "typescript": "^5.4.3"
+    "typescript": "^5.4.4"
   },
   "peerDependencies": {
     "react": ">=17.0.0"
