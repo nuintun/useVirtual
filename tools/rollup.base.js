@@ -2,9 +2,9 @@
  * @module rollup.base
  */
 
-import { createRequire } from 'module';
 import replace from '@rollup/plugin-replace';
 import treeShake from './plugins/tree-shake.js';
+import { createRequire, isBuiltin } from 'module';
 import typescript from '@rollup/plugin-typescript';
 
 const pkg = createRequire(import.meta.url)('../package.json');
@@ -58,6 +58,17 @@ export default function rollup(esnext) {
         warn(error);
       }
     },
-    external: ['tslib', 'react', 'react/jsx-runtime', 'react/jsx-dev-runtime']
+    external(source) {
+      const { dependencies = {}, peerDependencies = {} } = pkg;
+
+      return (
+        // Built-in modules
+        isBuiltin(source) ||
+        // Dependencies modules
+        Reflect.has(dependencies, source) ||
+        // Peer dependencies modules
+        Reflect.has(peerDependencies, source)
+      );
+    }
   };
 }
