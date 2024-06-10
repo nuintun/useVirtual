@@ -45,14 +45,14 @@
     "build:types": "tsc --declaration --emitDeclarationOnly --declarationDir types && node tools/fix-types.js"
   },
   "dependencies": {
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-replace": "^5.0.7",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/react": "^18.3.3",
     "magic-string": "^0.30.10",
-    "prettier": "^3.3.0",
+    "prettier": "^3.3.1",
     "rimraf": "^5.0.7",
     "rollup": "^4.18.0",
     "tsc-alias": "^1.8.10",
