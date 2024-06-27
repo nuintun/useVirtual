@@ -1,5 +1,5 @@
 /**
- * @module useIsoLayoutEffect
+ * @module useSafeLayoutEffect
  */
 
 import { useEffect, useLayoutEffect } from 'react';
@@ -11,7 +11,7 @@ const canUseDOM =
   typeof window.document.createElement !== 'undefined';
 
 /**
- * @function useIsoLayoutEffect
- * @description [hook] 使用同构 useLayoutEffect，防止 SSR 模式报错
+ * @function useSafeLayoutEffect
+ * @description [hook] 安全的 useLayoutEffect，防止 SSR 模式报错
  */
-export const useIsoLayoutEffect = canUseDOM ? useLayoutEffect : useEffect;
+export const useSafeLayoutEffect = canUseDOM ? useLayoutEffect : useEffect;

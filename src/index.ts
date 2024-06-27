@@ -17,8 +17,8 @@ import { isEqual, isEqualState } from './utils/equal';
 import { removeStyles, setStyles } from './utils/styles';
 import { HORIZONTAL_KEYS, VERTICAL_KEYS } from './utils/keys';
 import { useResizeObserver } from './hooks/useResizeObserver';
-import { useIsoLayoutEffect } from './hooks/useIsoLayoutEffect';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useSafeLayoutEffect } from './hooks/useSafeLayoutEffect';
 import { abortAnimationFrame, requestDeferAnimationFrame } from './utils/raf';
 import { Item, Measure, Options, Rect, ScrollTo, ScrollToItem, State, Virtual } from './utils/interface';
 import { getDuration, getScrollingOptions, getScrollToItemOptions, getScrollToOptions } from './utils/scroll';
@@ -367,7 +367,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     }
   }, []);
 
-  useIsoLayoutEffect(() => {
+  useSafeLayoutEffect(() => {
     isMountedRef.current = true;
 
     return () => {
@@ -375,7 +375,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     };
   }, []);
 
-  useIsoLayoutEffect(() => {
+  useSafeLayoutEffect(() => {
     setStyles(listRef.current, [
       ['margin', '0'],
       ['box-sizing', 'border-box']
@@ -384,7 +384,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     setStyles(viewportRef.current, [['padding', '0']]);
   }, []);
 
-  useIsoLayoutEffect(() => {
+  useSafeLayoutEffect(() => {
     const paddingTop = 'padding-top';
     const paddingLeft = 'padding-left';
     const paddingRight = 'padding-right';
@@ -403,7 +403,7 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
 
   const [listOffset, listSize] = state.list;
 
-  useIsoLayoutEffect(() => {
+  useSafeLayoutEffect(() => {
     const { current: list } = listRef;
     const { size: sizeKey } = keysRef.current;
 
@@ -414,13 +414,13 @@ export default function useVirtual<T extends HTMLElement, U extends HTMLElement>
     }
   }, [listSize, horizontal]);
 
-  useIsoLayoutEffect(() => {
+  useSafeLayoutEffect(() => {
     const { offset: offsetKey } = keysRef.current;
 
     setStyles(listRef.current, [[offsetKey, `${listOffset}px`]]);
   }, [listOffset, horizontal]);
 
-  useIsoLayoutEffect(() => {
+  useSafeLayoutEffect(() => {
     const { current: viewport } = viewportRef;
 
     if (viewport) {
