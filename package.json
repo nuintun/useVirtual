@@ -51,7 +51,7 @@
     "@rollup/plugin-replace": "^6.0.1",
     "@rollup/plugin-typescript": "^12.1.0",
     "@types/react": "^18.3.11",
-    "magic-string": "^0.30.11",
+    "magic-string": "^0.30.12",
     "prettier": "^3.3.3",
     "rimraf": "^6.0.1",
     "rollup": "^4.24.0",
