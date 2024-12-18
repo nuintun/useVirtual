@@ -2,7 +2,6 @@
  * @module rollup.base
  */
 
-import replace from '@rollup/plugin-replace';
 import treeShake from './plugins/tree-shake.js';
 import typescript from '@rollup/plugin-typescript';
 import { createRequire, isBuiltin } from 'node:module';
@@ -10,9 +9,9 @@ import { createRequire, isBuiltin } from 'node:module';
 const pkg = createRequire(import.meta.url)('../package.json');
 
 const externals = [
-  // Dependencies
+  // Dependencies.
   ...Object.keys(pkg.dependencies || {}),
-  // Peer dependencies
+  // Peer dependencies.
   ...Object.keys(pkg.peerDependencies || {})
 ];
 
@@ -27,21 +26,8 @@ const banner = `/**
 `;
 
 /**
- * @function env
- * @return {import('rollup').Plugin}
- */
-function env() {
-  return replace({
-    preventAssignment: true,
-    values: {
-      __DEV__: `process.env.NODE_ENV !== 'production'`
-    }
-  });
-}
-
-/**
  * @function rollup
- * @param {boolean} [esnext]
+ * @param {boolean} [esnext] Is esnext.
  * @return {import('rollup').RollupOptions}
  */
 export default function rollup(esnext) {
@@ -50,16 +36,20 @@ export default function rollup(esnext) {
     output: {
       banner,
       interop: 'auto',
-      exports: 'auto',
-      esModule: false,
       preserveModules: true,
       dir: esnext ? 'esm' : 'cjs',
       format: esnext ? 'esm' : 'cjs',
       generatedCode: { constBindings: true },
-      entryFileNames: `[name].${esnext ? 'js' : 'cjs'}`,
-      chunkFileNames: `[name].${esnext ? 'js' : 'cjs'}`
+      chunkFileNames: `[name].${esnext ? 'js' : 'cjs'}`,
+      entryFileNames: `[name].${esnext ? 'js' : 'cjs'}`
     },
-    plugins: [env(), typescript(), treeShake()],
+    plugins: [
+      typescript({
+        declaration: true,
+        declarationDir: esnext ? 'esm' : 'cjs'
+      }),
+      treeShake()
+    ],
     onwarn(error, warn) {
       if (error.code !== 'CIRCULAR_DEPENDENCY') {
         warn(error);

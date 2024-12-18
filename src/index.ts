@@ -31,7 +31,7 @@ export type { Item, Options, ScrollToItemOptions, ScrollToOptions, Virtual } fro
  * @description [hook] 虚列表
  * @param options 配置参数
  */
-export default function useVirtual<T extends HTMLElement, U extends HTMLElement>(options: Options): Virtual<T, U> {
+export function useVirtual<T extends HTMLElement, U extends HTMLElement>(options: Options): Virtual<T, U> {
   const { size, count, horizontal } = options;
 
   if (__DEV__) {
