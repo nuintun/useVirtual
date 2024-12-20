@@ -19,7 +19,9 @@
     "url": "git+https://github.com/nuintun/useVirtual.git"
   },
   "keywords": [
-    "virtual"
+    "react",
+    "virtual",
+    "virtual-list"
   ],
   "author": {
     "name": "nuintun",
