@@ -13,10 +13,10 @@
 [npm-image]: https://img.shields.io/npm/v/@nuintun/use-virtual?style=flat-square
 [npm-url]: https://www.npmjs.org/package/@nuintun/use-virtual
 [download-image]: https://img.shields.io/npm/dm/@nuintun/use-virtual?style=flat-square
-[languages-image]: https://img.shields.io/github/languages/top/nuintun/use-virtual?style=flat-square
-[github-url]: https://github.com/nuintun/use-virtual
+[languages-image]: https://img.shields.io/github/languages/top/nuintun/useVirtual?style=flat-square
+[github-url]: https://github.com/nuintun/useVirtual
 [tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-brightgreen?style=flat-square
 [side-effect-image]: https://img.shields.io/badge/side--effect-free-brightgreen?style=flat-square
 [bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/use-virtual
-[license-image]: https://img.shields.io/github/license/nuintun/use-virtual?style=flat-square
-[license-url]: https://github.com/nuintun/use-virtual/blob/main/LICENSE
+[license-image]: https://img.shields.io/github/license/nuintun/useVirtual?style=flat-square
+[license-url]: https://github.com/nuintun/useVirtual/blob/main/LICENSE
