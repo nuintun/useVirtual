@@ -10,13 +10,13 @@
 > [![Side Effect][side-effect-image]][bundle-phobia-url]
 > [![License][license-image]][license-url]
 
-[npm-image]: https://img.shields.io/npm/v/@nuintun/@nuintun/use-virtual?style=flat-square
-[npm-url]: https://www.npmjs.org/package/@nuintun/@nuintun/use-virtual
-[download-image]: https://img.shields.io/npm/dm/@nuintun/@nuintun/use-virtual?style=flat-square
-[languages-image]: https://img.shields.io/github/languages/top/nuintun/@nuintun/use-virtual?style=flat-square
-[github-url]: https://github.com/nuintun/@nuintun/use-virtual
+[npm-image]: https://img.shields.io/npm/v/@nuintun/use-virtual?style=flat-square
+[npm-url]: https://www.npmjs.org/package/@nuintun/use-virtual
+[download-image]: https://img.shields.io/npm/dm/@nuintun/use-virtual?style=flat-square
+[languages-image]: https://img.shields.io/github/languages/top/nuintun/svgo-loader?style=flat-square
+[github-url]: https://github.com/nuintun/svgo-loader
 [tree-shakeable-image]: https://img.shields.io/badge/tree--shakeable-true-brightgreen?style=flat-square
 [side-effect-image]: https://img.shields.io/badge/side--effect-free-brightgreen?style=flat-square
-[bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/@nuintun/use-virtual
-[license-image]: https://img.shields.io/github/license/nuintun/@nuintun/use-virtual?style=flat-square
-[license-url]: https://github.com/nuintun/@nuintun/use-virtual/blob/main/LICENSE
+[bundle-phobia-url]: https://bundlephobia.com/result?p=@nuintun/use-virtual
+[license-image]: https://img.shields.io/github/license/nuintun/svgo-loader?style=flat-square
+[license-url]: https://github.com/nuintun/svgo-loader/blob/main/LICENSE
