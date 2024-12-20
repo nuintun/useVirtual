@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/use-virtual",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "😎 ♻️ A tiny React hook for rendering large datasets like a breeze.",
   "type": "module",
   "sideEffects": false,
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nuintun/useVirtual.git"
+    "url": "git+https://github.com/nuintun/use-virtual.git"
   },
   "keywords": [
     "react",
@@ -29,9 +29,9 @@
   },
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/nuintun/useVirtual/issues"
+    "url": "https://github.com/nuintun/use-virtual/issues"
   },
-  "homepage": "https://github.com/nuintun/useVirtual#readme",
+  "homepage": "https://github.com/nuintun/use-virtual#readme",
   "scripts": {
     "lint": "tsc --noEmit",
     "clean": "node tools/clean.js",
