@@ -1,6 +1,6 @@
 {
   "name": "@nuintun/use-virtual",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "😎 ♻️ A tiny React hook for rendering large datasets like a breeze.",
   "type": "module",
   "sideEffects": false,
@@ -48,7 +48,7 @@
     "@rollup/plugin-replace": "^6.0.2",
     "@rollup/plugin-typescript": "^12.1.2",
     "@types/react": "^18.3.17",
-    "dts-paths": "^1.0.1",
+    "dts-paths": "^1.0.3",
     "magic-string": "^0.30.17",
     "prettier": "^3.4.2",
     "react": "^18.3.1",
